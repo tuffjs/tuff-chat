@@ -30,21 +30,22 @@ knex.migrate.latest()
 
 // Password Hashing
 
-const argon2 = require('argon2');
+const securePassword = require('secure-password')();
+const argon2 = securePassword();
 const rand = require('csprng');
 
 const password = 'password';
 const salt = rand(128, 36);
 const passwordWithSalt = password + salt;
-argon2.hash(passwordWithSalt, {
-  type: argon2.argon2i,
-  raw: true,
-}).then(hash => {
-  argon2.verify(hash, passwordWithSalt).then(match => {
-    if (match) {
+argon2.hash(passwordWithSalt, (err, hash) => {
+  if (err) throw err;
+
+  argon2.verify(passwordWithSalt, hash, (err, result) => {
+    if (err) throw err;
+    if (result === securePassword.VALID) {
       console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length);
     } else {
-      throw 'Argon2 Password Hashing Algorithm test failed';
+      throw 'Argon2 Password Hashing Algorithm test failed. Result is ' + result;
     }
   });
 });

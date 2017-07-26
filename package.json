@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/tuffjs/tuff-chat#readme",
   "dependencies": {
+    "argon2": "^0.16.1",
     "bluebird": "^3.5.0",
+    "csprng": "^0.1.2",
+    "knex": "^0.13.0",
     "pg-promise": "^6.3.6"
   }
 }

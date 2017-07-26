@@ -1,7 +1,7 @@
 exports.up = function(knex, Promise) {
   return Promise.all([
     knex.raw(
-      `CREATE TABLE user (
+      `CREATE TABLE "user" (
          id UUID PRIMARY KEY NOT NULL,
          email TEXT NOT NULL,
          hash BYTEA NOT NULL,

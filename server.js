@@ -27,12 +27,12 @@ knex.migrate.latest()
 
 
 // Password Hashing test
-/*
 const securePassword = require('secure-password');
 const argon2 = securePassword();
 const crypto = require('crypto');
 
 const password = 'password';
+
 crypto.randomBytes(16, (err, salt) => {
   
   var passwordWithSalt = Buffer.concat([Buffer.from(password), salt]);
@@ -43,14 +43,14 @@ crypto.randomBytes(16, (err, salt) => {
     argon2.verify(passwordWithSalt, hash, (err, result) => {
       if (err) throw err;
       if (result === securePassword.VALID) {
-        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length);
+        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('hex'));
       } else {
         throw 'Argon2 Password Hashing Algorithm test failed. Result is ' + result;
       }
     });
   });
 });
-*/
+
 
 // HTTP Server
 

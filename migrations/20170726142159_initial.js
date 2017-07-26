@@ -4,8 +4,8 @@ exports.up = function(knex, Promise) {
       `CREATE TABLE user (
          id UUID PRIMARY KEY NOT NULL,
          email TEXT NOT NULL,
-         hash TEXT NOT NULL,
-         salt TEXT NOT NULL,
+         hash BYTEA NOT NULL,
+         salt BYTEA NOT NULL,
        );`
     ),
   ]);

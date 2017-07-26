@@ -19,17 +19,15 @@ const knex = require('knex')({
   searchPath: 'knex,public'
 });
 
-/*
-Not running yet. Need exact format for Argon2 hash.
 knex.migrate.latest()
   .then(() => {
     console.log('DB migrations applied successfully');
   })
   .done();
-*/
 
-// Password Hashing
 
+// Password Hashing test
+/*
 const securePassword = require('secure-password');
 const argon2 = securePassword();
 const crypto = require('crypto');
@@ -52,7 +50,7 @@ crypto.randomBytes(16, (err, salt) => {
     });
   });
 });
-
+*/
 
 // HTTP Server
 

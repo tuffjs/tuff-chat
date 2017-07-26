@@ -9,10 +9,10 @@ const sql = pgp(DATABASE_URL);
 
 const server = require('http')
   .createServer(
-    (request, response) => {
-      sql.one(`SELECT 1`, req.body)
+    (req, res) => {
+      sql.one(`SELECT 1`)
         .then(one => {
-          response.end(`Hello from Heroku!<br/>SQL SELECT 1 returned ${ one }`);
+          res.end(`Hello from Heroku!<br/>SQL SELECT 1 returned ${ one }`);
         });
     }
   )

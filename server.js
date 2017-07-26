@@ -30,7 +30,7 @@ knex.migrate.latest()
 
 // Password Hashing
 
-const securePassword = require('secure-password')();
+const securePassword = require('secure-password');
 const argon2 = securePassword();
 const rand = require('csprng');
 

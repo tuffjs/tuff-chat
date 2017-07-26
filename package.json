@@ -1,0 +1,19 @@
+{
+  "name": "tuff-chat",
+  "version": "1.0.0",
+  "description": "A Comprehensive Example of How To Use TuffJS in Production",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tuffjs/tuff-chat.git"
+  },
+  "author": "Brian Haak <avesus8@gmail.com> (https://github.com/avesus)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tuffjs/tuff-chat/issues"
+  },
+  "homepage": "https://github.com/tuffjs/tuff-chat#readme"
+}

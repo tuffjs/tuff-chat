@@ -5,7 +5,7 @@ exports.up = function(knex, Promise) {
          id UUID PRIMARY KEY NOT NULL,
          email TEXT NOT NULL,
          hash BYTEA NOT NULL,
-         salt BYTEA NOT NULL,
+         salt BYTEA NOT NULL
        );`
     ),
   ]);

@@ -70,7 +70,7 @@ crypto.randomBytes(16, (err, salt) => {
     var realHash = terms[5];
     var realSalt = terms[4];
 
-    argon2.verify(passwordWithSalt, strHash, (err, result) => {
+    argon2.verify(passwordWithSalt, Buffer.fromString(strHash, 'ascii'), (err, result) => {
       if (err) throw err;
       if (result === securePassword.VALID) {
         console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, strHash, realHash, realSalt,

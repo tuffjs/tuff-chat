@@ -1,0 +1,271 @@
+/* ========= CONTAINERS ========= */
+
+/* Make inheritance of fonts for the whole basic layout */
+div, a, label {
+  font: inherit;
+  color: inherit;
+}
+
+/* Make links wrap their content */
+a {
+  display: inline-block;
+}
+
+form {
+  display: block;
+  vertical-align: baseline;
+}
+
+/* ============= BOX MODEL ============= */
+
+/* IE smart and convenient box model */
+html {
+  box-sizing: border-box;
+  /* Prevent font boosting on Android Chrome */
+  max-height: 999999px;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+  max-height: inherit;
+}
+
+/* Remove all the crazy margins, paddings and borders */
+*, *:before, *:after {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* ============== INDIVIDUAL ELEMENTS ========== */
+
+/* inline – <span>, <em>, <strong>
+   block-level – <div>, <p>, <article>
+   inline block-level – <input>, <textarea> */
+
+/* Interval between paragraphs */
+p {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+
+/* Headers palette with inspiration from Google Docs */
+
+/* Font should be the same for all headers */
+h1, h2, h3, h4, h5, h6 {
+  font: inherit;
+}
+
+h1 {
+  font-size: 26px;
+  line-height: 38px;
+}
+
+h2 {
+  font-size: 22px;
+  line-height: 32px;
+}
+
+h3 {
+  font-size: 18px;
+  line-height: 26px;
+}
+
+/* Make font lighter than the basic */
+h4, h5, h6 {
+  -khtml-opacity: .65;
+  -moz-opacity: .65;
+  -ms-filter: "alpha(opacity=65)";
+  filter: alpha(opacity=65);
+  opacity: .65;
+  zoom: 1;
+}
+
+h4 {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+h5 {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+h6 {
+  font-size: 14px;
+  line-height: 20px;
+  font-style: italic;
+}
+
+/* make transparent link selection, adjust last value opacity 0 to 1.0 */
+a {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+/* Disable underline on links */
+a {
+  text-decoration: none;
+}
+
+/* Ensure that label is always inlined and make its cursor a pointer */
+label {
+  display: inline-block; /* Makes label able to wrap controls */
+  cursor: default;
+  /* vertical-align: top; / * Positions the label itself relatively to its container */
+  vertical-align: baseline;
+}
+
+/* =================== CONTROLS ================ */
+
+/* Make basic controls inherit fonts and colors */
+input, button, textarea, select, select > option {
+  color: inherit;
+  font: inherit;
+  background: none;
+}
+
+/* Hide focus frame around controls */
+:focus {
+  outline: none;
+}
+
+/* Align with other controls and text and nice basic look */
+textarea {
+  /* vertical-align: bottom; - was working alone better */
+  
+  vertical-align: top;
+  
+  display: inline-block;
+
+  resize: none;
+  overflow-x: hidden;
+}
+
+/* Placeholders color */
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+  -khtml-opacity: .65;
+  -moz-opacity: .65;
+  -ms-filter: "alpha(opacity=65)";
+  filter: alpha(opacity=65);
+  opacity: .65;
+  zoom: 1;
+}
+
+/* Remove blank width on mobile Safari */
+input[type="radio"], input[type="checkbox"] {
+  width: 0;
+  height: 0;
+}
+
+/* Remove style and wrong height */
+select, input[type="radio"], input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  vertical-align: top;
+}
+select::-ms-expand {
+  display: none;
+}
+
+/* Remove tap callout on iOS */
+button, input, textarea, select, label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Desktop Safari search box */
+input[type="search"] {
+  -webkit-appearance: none; /*textfield;*/
+  border-radius: 0;
+}
+
+
+/* Input Range reset */
+input[type=range] {
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  width: 100%; /* Specific width is required for Firefox. */
+  background: transparent; /* Otherwise white in Chrome */
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  cursor: pointer;
+  /* Hides the slider so custom styles can be added */
+  background: transparent; 
+  border-color: transparent;
+  color: transparent;
+}
+
+
+/* ================= BUG FIXES ==================*/
+
+/* Prevent font boosting on iOS, Windows Phone, FF mobile */
+body {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: none;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent font boosting on Android Chrome */
+html {
+  max-height: 999999px;
+}
+*, *:before, *:after {
+  max-height: inherit;
+}
+
+/* Prevent zooming where available (modern mobile Chrome)*/
+html {
+  touch-action: pan-x pan-y;
+}
+
+/* Allow select any text (should be disabled for Cordova?) */
+html {
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*, *:before, *:after {
+  -moz-user-select: inherit;
+  -webkit-user-select: inherit;
+  -ms-user-select: inherit;
+  user-select: inherit;
+}
+
+/* Weird indent in textarea on iOS */
+.platform-ios textarea::-webkit-input-placeholder {
+  text-indent: 0;
+}
+.platform-ios textarea {
+  text-indent: -3px;
+}
+
+/* List items interval */
+li {
+  display: block;
+}
+li > div, li > svg, li > a {
+  display: block;
+  /*vertical-align: bottom;*/
+}
+
+/* Avoid overwidth when using margins on lists */
+li {
+  overflow: hidden;
+}
+
+/* Android browser doesn't recalculate fixed element's width after rotation */
+@media screen and (orientation: landscape){
+  .doesnt-exist { background:red; }
+}
+
+/* Android browser's input placeholder aligned left even if input aligned center.
+   Usage: create element with androidinput ID. */
+#androidinput::-webkit-input-placeholder {
+  text-align: center !important;
+}

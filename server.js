@@ -34,7 +34,7 @@ const password = 'password';
 
 
 // Awful implementation actually wastes a lot of bytes here,
-// see https://github.com/sodium-friends/sodium-native/blob/2c04cb9b1de5fa3dcd1b583120385801633d1daa/deps/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-encoding.c
+// see https://github.com/sodium-friends/sodium-native/blob/master/deps/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-encoding.c
 // on exact format. It's not binary buffer, it's a text string, and it uses base64 encoding and versioning:
 // $argon2i$v=19$m=32768,t=4,p=1$ajOVD5Qz7UarwBDO5XjAFg$cFkekt1gE6Kn7iXD9xK9FEiYYaR5E5XNJv3H0sGXwqQ
 // v - version. Defined as ARGON2_VERSION_NUMBER at https://github.com/P-H-C/phc-winner-argon2/blob/master/include/argon2.h

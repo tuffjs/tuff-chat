@@ -37,13 +37,16 @@ crypto.randomBytes(16, (err, salt) => {
   
   var passwordWithSalt = Buffer.concat([Buffer.from(password), salt]);
 
+  // Awful implementation actually wastes a lot of bytes here,
+  // see https://github.com/sodium-friends/sodium-native/blob/2c04cb9b1de5fa3dcd1b583120385801633d1daa/deps/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-encoding.c
+  // on exact format. It's not binary buffer, it's a text string, and it uses base64 encoding and versioning.
   argon2.hash(passwordWithSalt, (err, hash) => {
     if (err) throw err;
 
     argon2.verify(passwordWithSalt, hash, (err, result) => {
       if (err) throw err;
       if (result === securePassword.VALID) {
-        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('hex'));
+        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('utf8'));
       } else {
         throw 'Argon2 Password Hashing Algorithm test failed. Result is ' + result;
       }

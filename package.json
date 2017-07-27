@@ -21,6 +21,7 @@
     "knex": "^0.13.0",
     "pg-promise": "^6.3.6",
     "secure-password": "^2.1.1",
-    "tuff": "github:tuffjs/tuff"
+    "tuff": "github:tuffjs/tuff",
+    "webpack": "^3.4.1"
   }
 }

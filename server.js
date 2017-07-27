@@ -91,9 +91,57 @@ argon2.hash(Buffer.from(password, 'utf8'), (err, hash) => {
 
 // HTTP Server
 
+const path = require('path');
+const fs = require('fs');
+const workingDir = process.cwd();
+
+const hostedFiles = {
+        // file path, type, cache time, cache tag
+  '/': [ 'index.html', 'text/html', 0, null ],
+  '/index.js': [ '/index.js', 'application/javascript; charset=UTF-8', 3, null ],
+  '/main.css': [ '/main.css', 'text/css; charset=UTF-8', 3, null ],
+};
+
+const hostAFile = (req, res) => {
+
+  const file = hostedFiles[req.url];
+  if (!file) {
+    res.writeHead(404);
+    return res.end();
+  }
+  
+  const fileName = file[0];
+
+  const fullPath = path.join(workingDir, '/public/' + fileName);
+  console.log('Serving file', fullPath);
+  
+  try {
+    const rstream = fs.createReadStream(fullPath);
+    res.writeHead(200,
+      Object.assign({},
+        { 'Content-Type': file[1],
+          'Cache-Control': file[2] ? 'public, max-age=' + file[2] : 'max-age=0',
+        },
+        file[3] ? { 'ETag': file[3] } : {}
+      )
+    );
+    rstream.pipe(res);
+  } catch (e) {
+    console.log('Standard resource file not found!', e);
+    res.writeHead(404);
+    return res.end();
+  }
+}
+
 const server = require('http')
   .createServer(
     (req, res) => {
+      if (hostedFiles[req.url]) {
+        return hostAFile(req, res);
+      } else {
+        // TODO: check browser-side route and return index.html
+      }
+
       sql.one(`SELECT 1`)
         .then(one => {
           res.end(`Hello from Heroku!<br/>SQL SELECT 1 returned ${ one }`);

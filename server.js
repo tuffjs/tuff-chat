@@ -99,7 +99,8 @@ const hostedFiles = {
         // file path, type, cache time, cache tag
   '/': [ 'index.html', 'text/html', 0, null ],
   '/index.js': [ '/index.js', 'application/javascript; charset=UTF-8', 3, null ],
-  '/main.css': [ '/main.css', 'text/css; charset=UTF-8', 3, null ],
+  '/index.js.map': [ '/index.js.map', 'application/json; charset=UTF-8', 3, null ],
+  '/index.css': [ '/index.css', 'text/css; charset=UTF-8', 3, null ],
 };
 
 const hostAFile = (req, res) => {

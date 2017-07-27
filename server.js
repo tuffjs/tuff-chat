@@ -6,7 +6,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const Promise = require('bluebird');
 
 // Compiling browser-side assets
-var assetsCompiler = require('./assets-compiler');
+var assetsCompiler = require('./lib/assets-compiler');
 assetsCompiler.onComplete( function logBundlingComplete () {
   console.log('Browser-side assets bundled successfully.');
 });

@@ -47,17 +47,33 @@ crypto.randomBytes(16, (err, salt) => {
   // p = lanes - degree of parallelism
   // SALT
   // HASH
+  // End of it has padding with zeroes up to 128 bytes.
+  // We can store it in the following ways:
+  //   1) as is, 128 bytes in a BYTEA type field
+  //   2) with zeroes stripped, in a TEXT field because it is text, 96 characters
+  //   3) parse it, but we should support upgraded OS which may have different algorithm with version > 19,
+  //     and I'm not sure about whether results are different if parameters m, t, and p are different.
+  //     This option lets to store just 48 bytes.
+  // Using option (1) looks like technical waste, because it's super simple to strip the buffer finding the terminating zeroes.
+  // So, we can compare (2) and (3): approx. 96 bytes (variable +- few bytes because of Base64)
+  //   vs 48 bytes, but losing version and parameters.
+  // If we upgrade it in the future, we can use the same field for different formats.
+  // 96 - 48 = 48. The waste for 1,000,000 users will be 48 megabytes. That's nothing. Trying to optimize that may break
+  // compatibility, wastes processing power on decoding and encoding Base64 each time additionally
+  // (the library Argon2 does that internally too), so we decided just to strip the string.
   argon2.hash(passwordWithSalt, (err, hash) => {
     if (err) throw err;
 
-    var terms = hash.toString('ascii').split('$');
+    const strHash = hash.toString('ascii', 0, hash.indexOf(0));
+
+    var terms = strHash.split('$');
     var realHash = terms[5];
     var realSalt = terms[4];
 
-    argon2.verify(passwordWithSalt, hash, (err, result) => {
+    argon2.verify(passwordWithSalt, strHash, (err, result) => {
       if (err) throw err;
       if (result === securePassword.VALID) {
-        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('utf8'), realHash, realSalt,
+        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, strHash, realHash, realSalt,
           Buffer.from(realHash, 'base64').toString('hex'),
           Buffer.from(realSalt, 'base64').toString('hex')
         );

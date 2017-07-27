@@ -39,14 +39,28 @@ crypto.randomBytes(16, (err, salt) => {
 
   // Awful implementation actually wastes a lot of bytes here,
   // see https://github.com/sodium-friends/sodium-native/blob/2c04cb9b1de5fa3dcd1b583120385801633d1daa/deps/libsodium/src/libsodium/crypto_pwhash/argon2/argon2-encoding.c
-  // on exact format. It's not binary buffer, it's a text string, and it uses base64 encoding and versioning.
+  // on exact format. It's not binary buffer, it's a text string, and it uses base64 encoding and versioning:
+  // $argon2i$v=19$m=32768,t=4,p=1$ajOVD5Qz7UarwBDO5XjAFg$cFkekt1gE6Kn7iXD9xK9FEiYYaR5E5XNJv3H0sGXwqQ
+  // v - version. Defined as ARGON2_VERSION_NUMBER at https://github.com/P-H-C/phc-winner-argon2/blob/master/include/argon2.h
+  // m = m_cost - memory cost
+  // t = t_cost - time cost
+  // p = lanes - degree of parallelism
+  // SALT
+  // HASH
   argon2.hash(passwordWithSalt, (err, hash) => {
     if (err) throw err;
+
+    var terms = hash.toString('ascii').split('$');
+    var realHash = terms[5];
+    var realSalt = terms[4];
 
     argon2.verify(passwordWithSalt, hash, (err, result) => {
       if (err) throw err;
       if (result === securePassword.VALID) {
-        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('utf8'));
+        console.log('Tested Argon2 Password Hashing Algorithm. Hash size is', hash.length, 'should be crypto_pwhash_argon2i_STRBYTES =', securePassword.HASH_BYTES, hash.toString('utf8'), realHash, realSalt,
+          Buffer.from(realHash, 'base64').toString('hex'),
+          Buffer.from(realSalt, 'base64').toString('hex')
+        );
       } else {
         throw 'Argon2 Password Hashing Algorithm test failed. Result is ' + result;
       }

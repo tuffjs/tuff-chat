@@ -1,3 +1,7 @@
+window.lastNavigationTimestamp = new Date().valueOf();
+
+var debug = require('./debug.js');
+
 var create = require('tuff/lib/create');
 var Component = require('tuff/lib/component');
 

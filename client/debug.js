@@ -1,20 +1,31 @@
-// Implement browser-wide error interceptors
+var CircularJSON = require('circular-json');
 
-const serverUrl = window.SERVER_URL || window.location.origin;
-const serverParsedLocation = document.createElement('a');
+var serverUrl = window.SERVER_URL || window.location.origin;
+var serverParsedLocation = document.createElement('a');
 serverParsedLocation.href = serverUrl;
 
-const SERVER_WS_URL = serverParsedLocation.protocol === 'https:' ?
+var SERVER_WS_URL = serverParsedLocation.protocol === 'https:' ?
   // Production URL
   'wss://' + serverParsedLocation.host :
   // Debug
   'ws://' + serverParsedLocation.host;
 
-const myWebSocket = new WebSocket(SERVER_WS_URL);
+var myWebSocket = new WebSocket(SERVER_WS_URL);
 
-const WS_KEEPALIVE_INTERVAL = 25000;
+var WS_KEEPALIVE_INTERVAL = 25000;
 
-myWebSocket.onopen = (event) => {
+myWebSocket.onclose = function (event) {
+  console.log('Socket closed with code', event.code,
+    'reason', event.reason, 'wasClean', event.wasClean);
+};
+
+myWebSocket.onerror = function (event) {
+  console.log('Socket error', event);
+};
+
+myWebSocket.onopen = function (event) {
+
+  // Ready to send messages
   // console.log(myWebSocket);
   // myWebSocket.send('hello');
   // Keeping alive
@@ -22,6 +33,27 @@ myWebSocket.onopen = (event) => {
     myWebSocket.send('');
   }, WS_KEEPALIVE_INTERVAL);
 };
+
+myWebSocket.onmessage = function (event) {
+  console.log('RECVD:', event.data);
+};
+
+
+// Implement browser-wide error interceptors
+window.onerror =
+  function (msg, url, line, col, error) {
+    console.log(msg, url, line, col, error);
+    return true; // Suppress error alerts and messages
+  };
+
+window.addEventListener('error',
+  function (event) {
+    console.log(event);
+    return true; // Suppress error alerts and messages
+  },
+  true // catch on capturing phase
+);
+
 
 
 
@@ -34,22 +66,28 @@ window.console.log = function consoleLog() {
   try {
     // TODO: use buffer instead and send
     // it after connection will be established
-    setTimeout(function send () {
-    myWebSocket.send(
-      JSON.stringify(
-        { debug:
-          { time:
-              new Date().valueOf(),
-            message:
-              Object.keys(args)
-                .map(function (key) {
-                  return args[key];
-                })
+    function send () {
+      myWebSocket.send(
+        CircularJSON.stringify(
+          { debug:
+            { time:
+                new Date().valueOf(),
+              message:
+                Object.keys(args)
+                  .map(function (key) {
+                    return args[key];
+                  })
+            }
           }
-        }
-      )
-    );
-    }, 3000);
+        )
+      );
+    }
+
+    if (myWebSocket.readyState !== 1) {
+      setTimeout(send, 3000);
+    } else {
+      send();
+    }
   } catch (e) {
     // TODO: store before reconnect
     originalConsoleLog.call(console, e);

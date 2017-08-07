@@ -127,6 +127,13 @@ wss.on('connection', (ws, req) => {
     } else if (data) {
 
       if (data.debug) {
+        // var SourceMapConsumer = require('source-map')
+        //   .SourceMapConsumer;
+        // var sourceMapFile = // check version of client!
+        // var smc = new SourceMapConsumer(sourceMapFile);
+        // add smc.originalPositionFor(
+        // line, column) ->
+        // { source, line, column, name }
         const args =
           [ data.debug.time,
             addr.ip + ':' + addr.port
@@ -135,11 +142,11 @@ wss.on('connection', (ws, req) => {
             
         console.log.apply(console, args);
       }
-      try {
+     /* try {
         ws.send(JSON.stringify({}));
       } catch (e) {
         return;
-      }
+      }*/
     }
   });
 });

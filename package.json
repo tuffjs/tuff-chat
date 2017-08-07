@@ -17,11 +17,16 @@
   },
   "homepage": "https://github.com/tuffjs/tuff-chat#readme",
   "dependencies": {
+    "array.prototype.fill": "^1.0.2",
     "bluebird": "^3.5.0",
+    "circular-json": "^0.3.3",
+    "es6-object-assign": "^1.1.0",
+    "es6-symbol": "^3.1.1",
     "knex": "^0.13.0",
     "pg-promise": "^6.3.6",
     "secure-password": "^2.1.1",
-    "tuff": "github:tuffjs/tuff",
+    "string.prototype.startswith": "^0.2.0",
+    "tuff": "file:../tuff",
     "webpack": "^3.4.1",
     "ws": "^3.1.0"
   }

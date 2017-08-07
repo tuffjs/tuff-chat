@@ -203,7 +203,7 @@ input[type=range]::-ms-track {
 /* ================= BUG FIXES ==================*/
 
 /* Prevent font boosting on iOS, Windows Phone, FF mobile */
-body {
+html, body {
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: none;
   -ms-text-size-adjust: 100%;

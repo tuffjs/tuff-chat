@@ -94,9 +94,9 @@ module.exports = {
               vnode.data.component.vnode = null;
               vnode.data.component = null;
             }
-          },
-        },
-      },
+          }
+        }
+      }
     );
   }
 };

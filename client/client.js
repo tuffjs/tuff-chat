@@ -149,7 +149,7 @@ var Tuff = {
   // You can use only one of the horizontal flags at a time.
 
   // There is one two-dimensional flag:
-  AlignCenter: Tuff.AlignVCenter | Tuff.AlignHCenter,
+  get AlignCenter () { return Tuff.AlignVCenter | Tuff.AlignHCenter },
     // Centers in both dimensions.
     // You can use at most one horizontal and one vertical flag at a time.
     // Tuff.AlignCenter counts as both horizontal and vertical.
@@ -163,15 +163,15 @@ var Tuff = {
     // If you want Tuff.AlignLeft to always mean "left" and
     // Tuff.AlignRight to always mean "right",
     // combine the flag with Tuff.AlignAbsolute.
-  AlignLeading: Tuff.AlignLeft,
-  AlignTrailing: Tuff.AlignRight,
+  get AlignLeading () { return Tuff.AlignLeft },
+  get AlignTrailing () { return Tuff.AlignRight },
 
   // Masks:
-  AlignHorizontal_Mask: Tuff.AlignLeft | Tuff.AlignRight |
-    Tuff.AlignHCenter | Tuff.AlignJustify | Tuff.AlignAbsolute,
+  get AlignHorizontal_Mask () { return Tuff.AlignLeft | Tuff.AlignRight |
+    Tuff.AlignHCenter | Tuff.AlignJustify | Tuff.AlignAbsolute },
 
-  AlignVertical_Mask: Tuff.AlignTop | Tuff.AlignBottom |
-    Tuff.AlignVCenter,
+  get AlignVertical_Mask () { return Tuff.AlignTop | Tuff.AlignBottom |
+    Tuff.AlignVCenter },
 
   Horizontal: 1,
   Vertical: 2,
@@ -435,7 +435,7 @@ var Widget = create(TuffObject, {
 
 
 var LayoutItem = {
-  init: function (alignment = 0) {
+  init: function (alignment) {
     this.align = alignment;
   },
 
@@ -1144,7 +1144,7 @@ var Cont = create(Component, {
     }
 
     metaViewport.setAttribute('content',
-      'initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0');
+      'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0');
 
     self.child1 = create(Child, {
       onFocus: function () {
@@ -1220,7 +1220,7 @@ var Cont = create(Component, {
 
     return this;
   },
-  setWidth(width) {
+  setWidth: function (width) {
     this.width = width;
     this.invalidate();
     this.render();

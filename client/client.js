@@ -12,7 +12,7 @@ var Component = require('tuff/lib/component');
 
 var C2 = create(Component, {
   init: function () {
-    this.height = 40;
+    // this.height = 40;
     return this;
   },
 
@@ -1135,6 +1135,7 @@ var ViewContainer = create(Widget, {
 var Cont = create(Component, {
   init: function () {
     var self = this;
+    /*
     var metaViewport = document.querySelector('meta[name=viewport]');
     if (!metaViewport) {
       metaViewport = document.createElement('meta');
@@ -1144,14 +1145,16 @@ var Cont = create(Component, {
     }
 
     metaViewport.setAttribute('content',
-      'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0');
+      'user-scalable=0, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0');
+    */
 
     self.child1 = create(Child, {
       onFocus: function () {
         setTimeout( function () {
           var rect = self.trackedFrame.getBoundingClientRect();
+          window.resizeTo(self.width, self.height);
           console.log('Tracked frame',
-            rect, window.innerHeight);
+            rect, window.innerHeight, self.width, self.height);
         }, 1000);
         return Child.onFocus.apply(self.child1, arguments);
       }
@@ -1160,7 +1163,33 @@ var Cont = create(Component, {
     self.c2 = create(C2).init();
 
     self.width = window.innerWidth;
-    self.height = window.innerHeight;
+    self.height = window.innerHeight;// - 88;
+    self.minimumWidth = self.width < self.height ?
+      self.width : self.height;
+    self.offsetTop = 0;
+
+    function orientation () {
+      return window.screen.orientation ? window.screen.orientation.type :
+        (window.orientation === 90 || window.orientation === -90) ?
+        'portrait' : 'landscape';
+    }
+
+/*
+    document.documentElement.style.width = self.width + 'px';
+    document.documentElement.style.height = self.height + 'px';
+    document.documentElement.height = self.height + 'px';
+    document.documentElement.style.overflow = 'scroll';
+*/
+    console.log('INIT WITH', this.width, this.height,
+      document.documentElement.offsetTop,
+      document.documentElement.clientWidth,
+        document.documentElement.clientHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.scrollHeight,
+        window.screen.height, window.screen.width,
+        //window.orientation || window.screen.orientation.type,
+        window.screen.availTop, window.screen.availHeight,
+        window.screen.availLeft, window.screen.availWidth);
 
     self.c2.setHeight(self.height);
 
@@ -1186,16 +1215,186 @@ var Cont = create(Component, {
     })();
     }
 
+    window.addEventListener('scroll', function (event) {
 
-    window.addEventListener("touchmove", function(e) {
+      self.lastScrollHappenAt = new Date().valueOf();
+
+      if (self.lastResizeHappenAt &&
+          (self.lastScrollHappenAt - self.lastResizeHappenAt)
+          < 500) {
+        console.log('SCROLL CANCELED', window.pageYOffset,
+          window.innerHeight);
+        return;
+      }
+
+      var barsDiff = window.screen.height -
+        document.documentElement.clientHeight - 20;
+      var barsDiffLandscape = window.screen.width -
+        document.documentElement.clientHeight - 20;
+
+      var fixHeight = window.outerHeight - window.pageYOffset +
+        window.innerHeight - 1;
+
+      console.log('==========WINDOW SCROLL',
+        window.pageYOffset,
+        window.innerHeight,
+        window.innerHeight,
+        self.scrollTop,
+        document.documentElement.clientWidth,
+        document.documentElement.clientHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.scrollHeight,
+        window.screen.height, window.screen.width,
+        // window.orientation || window.screen.orientation.type,
+        window.screen.availTop, window.screen.availHeight,
+        window.screen.availLeft, window.screen.availWidth,
+        barsDiff, barsDiffLandscape);
+
+      // 111 350 350 0    320 460 0 0 568 320 0 568 0 320
+      // 131 310 310 null 320 440 0 0 568 320 0 568 0 320
+
+      if (window.pageYOffset > 0) {
+        //self.width = window.innerWidth;
+        // self.height = window.innerHeight + window.pageYOffset;
+
+
+        if (!window.orientation) {
+          // Working for portrait in Safari only
+          //self.height = (200 - (self.scrollTop || 0) -
+          //  window.pageYOffset) * 2 + 20 + 1.5 + barsDiff - 88 + 20;
+          // Works embedded in iOS
+          self.height = (200 - (self.scrollTop || 0) -
+            window.pageYOffset) * 2 + 1.5 + 88;
+
+        } else {
+          // Working for landscape in Safari only
+          //self.height = (200 - (self.scrollTop || 0) -
+          //  window.pageYOffset) * 2 + 20 + 1.5;
+          // Works embedded in iOS (height on start determined incorrectly
+          // but after restoring scroll is correct.
+          self.height = (200 - (self.scrollTop || 0) -
+            window.pageYOffset) * 2 + 20 + 1.5 + 44;
+        }
+
+        // self.height = 52;//fixHeight - 44;
+
+        self.offsetTop = window.pageYOffset - 0.5;
+
+        self.c2.setHeight(self.height);
+
+        self.invalidate();
+        self.render();
+        
+        // window.scrollTo(0, 0);
+      } else {
+        setTimeout(function () {
+          self.width = window.innerWidth;
+          self.height = window.innerHeight;// + self.offsetTop;
+          self.offsetTop = 0;
+
+          self.c2.setHeight(self.height);
+
+          self.invalidate();
+          self.render();
+       }, 500);
+
+        return;
+
+        self.width = window.innerWidth;
+        self.height = window.innerHeight;
+
+      document.documentElement.style.width = self.width + 'px';
+      document.documentElement.style.height = self.height + 'px';
+      document.documentElement.height = self.height + 'px';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.height = self.height + 'px';
+      document.body.style.height = self.height + 'px';
+      document.body.style.overflow = 'hidden';
+
+      var metaViewport = document.querySelector('meta[name=viewport]');
+
+      metaViewport.setAttribute('content',
+        'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=0, height=' + self.height);
+
+      self.c2.setHeight(self.height);
+
+        self.invalidate();
+        self.render();
+
+
+        console.log(document.documentElement.clientWidth,
+          document.documentElement.clientHeight,
+          document.documentElement.offsetHeight,
+          document.documentElement.scrollHeight,
+          window.screen.height, window.screen.width,
+          // window.orientation || window.screen.orientation.type,
+          window.screen.availTop, window.screen.availHeight,
+          window.screen.availLeft, window.screen.availWidth);
+
+        console.log(document.body.clientWidth,
+          document.body.clientHeight,
+          document.body.offsetHeight,
+          document.body.scrollHeight);
+      }
+    });
+
+    window.addEventListener("touchstart", function (e) {
+      console.log('Window touch');
+      // e.preventDefault();
+    });
+
+    window.addEventListener("touchmove", function (e) {
       console.log('Window move');
       // e.preventDefault();
     });
 
     // handle event
     window.addEventListener("resize", function() {
-      self.width = window.innerWidth;
+
+      self.lastResizeHappenAt = new Date().valueOf();
+
+      console.log('RESIZE REQUESTED', orientation());
+
+      if (self.lastOrientationChangeHappenAt &&
+          (self.lastResizeHappenAt - self.lastOrientationChangeHappenAt)
+          < 500) {
+        console.log('RESIZE CANCELED');
+        return;
+      }
+
+      console.log('RES.W=', document.documentElement.clientWidth,
+        document.documentElement.clientHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.scrollHeight,
+        window.screen.height, window.screen.width,
+        //window.orientation || window.screen.orientation.type,
+        window.screen.availTop, window.screen.availHeight,
+        window.screen.availLeft, window.screen.availWidth,
+        window.clientWidth, window.clientHeight);
+
+      console.log(document.body.clientWidth,
+        document.body.clientHeight,
+        document.body.offsetHeight,
+        document.body.scrollHeight);
+
+      self.width = document.documentElement.clientWidth; //window.innerWidth;
       self.height = window.innerHeight;
+/*
+      document.documentElement.style.width = self.width + 'px';
+      document.documentElement.style.height = self.height + 'px';
+      document.documentElement.height = self.height + 'px';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.height = self.height + 'px';
+      document.body.style.height = self.height + 'px';
+      document.body.style.overflow = 'hidden';
+
+      var metaViewport = document.querySelector('meta[name=viewport]');
+
+      metaViewport.setAttribute('content',
+        'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, shrink-to-fit=0, height=' + self.height);
+*/
+      self.c2.setHeight(self.height);
+
       console.log('RESIZE:',
 	window.pageXOffset,
         window.pageYOffset,
@@ -1210,12 +1409,85 @@ var Cont = create(Component, {
         window.scrollTo(0, 0);
       }
 
-      self.c2.setHeight(self.height);
+      // self.c2.setHeight(self.height);
+      console.log(document.documentElement.clientWidth,
+        document.documentElement.clientHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.scrollHeight,
+        window.screen.height, window.screen.width,
+        //window.orientation || window.screen.orientation.type,
+        window.screen.availTop, window.screen.availHeight,
+        window.screen.availLeft, window.screen.availWidth);
+
+      console.log(document.body.clientWidth,
+        document.body.clientHeight,
+        document.body.offsetHeight,
+        document.body.scrollHeight);
     });
 
     window.addEventListener('orientationchange', function() {
-      // window.scrollTo(0, 0);
-      console.log('ORIENTATION');
+
+      self.lastOrientationChangeHappenAt = new Date().valueOf();
+
+      console.log(window.innerWidth, window.innerHeight,
+        self.width, self.height, self.width === window.innerWidth,
+        self.height === window.innerHeight,
+        self.lastOrientationChangeHappenAt -
+        self.lastResizeHappenAt);
+        // window.orientation || window.screen.orientation.type);
+
+      // iOS: P->L 568 320 568 320 true true 15
+      //      L->P 320 460 320 460 true true 24
+      // Chrome Desktop Emulator iOS: P->L 568 320 852 480 false false 10
+      //                              L->P 852 480 568 320 false false 13
+      // Chrome Android: P->L 320 452 320 452 true true null or > 500
+      //                 L->p 534 239 534 239 true true null or > 500
+      // Chrome Win Touch: we have no orientation event.
+
+      // Google Chrome Mobile requires document's width being less
+      // than screen width, otherwise it'll resize viewport:
+      if (!self.lastResizeHappenAt ||
+          (self.lastOrientationChangeHappenAt - self.lastResizeHappenAt)
+          > 500) {
+        if (self.width > self.height) {
+          console.log('L->P Google Chrome Mobile');
+          self.setWidth(self.minimumWidth);
+        }
+      }
+      
+
+      return;
+
+      // On iOS resize comes first to create beautiful rotation transition
+      // animation.
+      if (window.innerWidth !== self.width ||
+          window.innerHeight !== self.height) {
+
+        if (self.innerWidth > self.innerHeight) {
+          // Change width before returning to portrait mode, otherwise
+          // browser will change viewport's scale.
+          console.log('L->P iOS', window.innerWidth);
+          self.setWidth(self.minimumWidth);
+        } else {
+          console.log('P->L iOS', window.innerWidth, window.innerHeight,
+            self.width, self.height, window.orientation);
+          self.setWidth(window.innerWidth);
+        }
+      }
+      
+      if (window.innerWidth === self.width &&
+          window.innerHeight === self.height) {
+
+        if (window.innerWidth > window.innerHeight) {
+          // Change width before returning to portrait mode, otherwise
+          // browser will change viewport's scale.
+          console.log('L->P Chrome', window.innerWidth);
+          self.setWidth(self.minimumWidth);
+        }
+      }
+
+      console.log('ORIENTATION', window.innerWidth, window.innerHeight,
+        self.width, self.height);
     });
 
     return this;
@@ -1228,6 +1500,9 @@ var Cont = create(Component, {
   view: function (h) {
     // console.log(window);
     var self = this;
+
+    console.log('--- HEIGHT:', self.height);
+
     // return h('body');
     return h('body',
       { style:
@@ -1271,17 +1546,40 @@ var Cont = create(Component, {
             width: self.width + 'px',
             overflowY: 'scroll',
             overflowX: 'hidden',
-            '-webkitOverflowScrolling': 'touch'
+            '-webkitOverflowScrolling': 'touch',
+            position: 'absolute',
+            top: self.offsetTop + 'px'
           },
           hook:
-          { insert:
+          { postpatch:
+              function (old, vnode) {
+                var scrollingDiv = vnode.elm;
+                console.log('DIV', scrollingDiv.clientWidth,
+                  scrollingDiv.clientHeight,
+                  scrollingDiv.offsetHeight,
+                  scrollingDiv.scrollHeight);
+              },
+
+            insert:
               function (vnode) {
                 var scrollingDiv = vnode.elm;
+                console.log('DIV', scrollingDiv.clientWidth,
+                  scrollingDiv.clientHeight,
+                  scrollingDiv.offsetHeight,
+                  scrollingDiv.scrollHeight);
+
+                if (scrollingDiv.scrollTop === 0) {
+                  self.atTop = true;
+                }
                 if (scrollingDiv.scrollHeight <= scrollingDiv.clientHeight) {
+    console.log(scrollingDiv.scrollHeight, scrollingDiv.clientHeight);
     self.atBottom = true;
   }
+
   scrollingDiv.addEventListener('scroll', function(event){
-    // console.log(event, event.target.scrollTop);
+
+    console.log('---SCROLL', event.target.scrollTop);
+    self.scrollTop = event.target.scrollTop;
     
     if (event.target.scrollTop === 0) {
       self.atTop = true;
@@ -1301,12 +1599,14 @@ var Cont = create(Component, {
   var topLock = false;
   var bottomLock = false;
   scrollingDiv.addEventListener('touchmove', function(event){
+    console.log('Touchmove');
     event.stopPropagation();
     var currentY = event.touches[0].clientY;
     if (currentY > lastY) {
       // moved down
       if (self.atTop) {
         event.preventDefault();
+        console.log('pd');
         topLock = true;
       }
       
@@ -1319,6 +1619,7 @@ var Cont = create(Component, {
       // moved top
       if (self.atBottom) {
         event.preventDefault();
+        console.log('pd');
         bottomLock = true;
       }
       
@@ -1331,6 +1632,8 @@ var Cont = create(Component, {
     lastY = currentY;
   });
   scrollingDiv.addEventListener('touchstart', function(event){
+    // TODO: logic when another touch happened.
+    // We should prevent pinch zoom here and deactivation of our locks.
     lastY = event.touches[0].clientY;
     event.stopPropagation();
   });
@@ -1345,19 +1648,7 @@ var Cont = create(Component, {
           h('div',
             { style:
               { backgroundColor: 'white',
-                // position: 'relative',
-                // position: 'absolute',
-                
-
-                //position: 'fixed',
-                //bottom: '0px',
-                //top: '0px',
-
-                // height: '100%'
-                //bottom: '0px'
-                //! minHeight: '460px'//self.height - 1 + 'px' //'460px',
                 height: '1460px'
-                // height: self.height + 'px'
               },
 
               hook:
@@ -1385,23 +1676,64 @@ var Cont = create(Component, {
             ]
           )
       ),
-      this.c2.comp()
+      this.c2.comp(),
+      h('div', { style: {
+          backgroundColor: 'green',
+          position: 'absolute',
+          bottom: self.height - 20 + 'px'
+        } },
+        'TopLeft'),
+      h('div', { style: {
+          backgroundColor: 'green',
+          position: 'absolute',
+          top: '0px', //self.offsetTop / 2 + 'px',
+          left: self.width - 67 + 'px'
+        } },
+        'TopRight'),
+      h('div', { style: {
+          backgroundColor: 'red',
+          position: 'absolute',
+          // bottom: 0 + 88 + 'px',
+          top: self.height - 20 + 'px',
+          right: 0 + 'px'
+        } },
+        'RightBottom'),
+
       ]
     );
+
   }
 });
 
+/*
+window.onload = function () {
+  console.log('------LOAD');
+
+    var root = document.getElementsByTagName('body')[0];
+    root.innerHTML = '';
+
+    var cont = create(Cont).init();
+
+    cont.mount(root);
+    cont.render();
+};*/
+
+// TODO: this should be called from main view frame
 document.addEventListener('DOMContentLoaded', function () {
 
-  // window.scrollTo(0, 0);
 
-  var root = document.getElementsByTagName('body')[0];
-  root.innerHTML = '';
+  setTimeout(function () {
+    var root = document.getElementsByTagName('body')[0];
+    root.innerHTML = '';
+    //root.style.height = window.innerHeight;
+    //root.style.width = window.innerWidth;
 
-  var cont = create(Cont).init();
+    var cont = create(Cont).init();
 
-  cont.mount(root);
-  cont.render();
+    cont.mount(root);
+    cont.render();
+    window.scrollTo(0, 0);
+  }, 1500);
 
   // window.scrollTo(0, 0);//44);
 });

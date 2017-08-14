@@ -1,42 +1,32 @@
-var CircularJSON = require('circular-json');
+var wsSend = function () {};
 
-var serverUrl = window.SERVER_URL || window.location.origin;
-var serverParsedLocation = document.createElement('a');
-serverParsedLocation.href = serverUrl;
+function initDebug (wsSendFunction) {
 
-var SERVER_WS_URL = serverParsedLocation.protocol === 'https:' ?
-  // Production URL
-  'wss://' + serverParsedLocation.host :
-  // Debug
-  'ws://' + serverParsedLocation.host;
+  wsSend = wsSendFunction;
 
-var myWebSocket = new WebSocket(SERVER_WS_URL);
+  return {
+    receive: function onMessage (message) {
 
-var WS_KEEPALIVE_INTERVAL = 25000;
+      if (message.debug) {
+        if (message.debug.reload) {
+          if (window.confirm(
+              'Browser-side assets bundled successfully. Reload?')) {
+            window.location.reload(true);
+          }
+          return true;
 
-myWebSocket.onclose = function (event) {
-  console.log('Socket closed with code', event.code,
-    'reason', event.reason, 'wasClean', event.wasClean);
-};
+        } else if (message.debug.errors) {
+          var errorsText = message.debug.errors.join('');
+          console.error(errorsText);
+          window.alert(errorsText);
+          return true;
+        }
+      }
 
-myWebSocket.onerror = function (event) {
-  console.log('Socket error', event);
-};
-
-myWebSocket.onopen = function (event) {
-
-  // Ready to send messages
-  // console.log(myWebSocket);
-  // myWebSocket.send('hello');
-  // Keeping alive
-  setInterval(function keepWsAlive () {
-    myWebSocket.send('');
-  }, WS_KEEPALIVE_INTERVAL);
-};
-
-myWebSocket.onmessage = function (event) {
-  console.log('RECVD:', event.data);
-};
+      return false;
+    }
+  };
+}
 
 
 // Implement browser-wide error interceptors
@@ -63,44 +53,27 @@ var originalConsoleLog = window.console.log;
 window.console.log = function consoleLog() {
   var args = arguments;
   // originalConsoleLog.call(console, 'WRAPPED');
-  try {
-    // TODO: use buffer instead and send
-    // it after connection will be established
-    function send () {
-      myWebSocket.send(
-        CircularJSON.stringify(
-          { debug:
-            { time:
-                new Date().valueOf(),
-              message:
-                Object.keys(args)
-                  .map(function (key) {
-                    return args[key];
-                  })
-            }
-          }
-        )
-      );
-    }
 
-    if (myWebSocket.readyState !== 1) {
-      setTimeout(send, 3000);
-    } else {
-      send();
+  if (!wsSend(
+    { debug:
+      { time: new Date().valueOf(),
+
+        message: Object.keys(args)
+          .map(function (key) {
+            return args[key];
+          })
+      }
     }
-  } catch (e) {
+  )) {
     // TODO: store before reconnect
-    originalConsoleLog.call(console, e);
-  } 
+    // originalConsoleLog.call(console, e);
+  }
+
   originalConsoleLog.apply(console, arguments);
 };
 
 
 console.log('DEBUG MODE ENABLED');
-console.log('Server URL: ' + serverUrl);
-console.log('WebSocket URL: ' + SERVER_WS_URL);
 
-console.log('Hi Steve!');
-
-
+module.exports = initDebug;
 

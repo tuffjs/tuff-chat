@@ -22,7 +22,7 @@ form {
 html {
   box-sizing: border-box;
   /* Prevent font boosting on Android Chrome */
-  max-height: 999999px;
+  /* max-height: 999999px; */
 }
 *, *:before, *:after {
   box-sizing: inherit;

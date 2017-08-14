@@ -10,12 +10,52 @@
 const PORT = process.env.PORT || 8080;
 
 const Promise = require('bluebird');
+// const CircularJSON = require('circular-json');
 
 
 // Compiling browser-side assets
 var assetsCompiler = require('./lib/assets-compiler');
-assetsCompiler.onComplete(() => {
-  console.log('Browser-side assets bundled successfully.');
+
+let lastClientCodeHash = null;
+let indexJsFile = null;
+let indexJsMapFile = null;
+
+let afterFirstCompileCallback = null;
+
+assetsCompiler.onComplete((file, mapFile, hash, stats) => {
+
+  var firstNotify = (!lastClientCodeHash && afterFirstCompileCallback);
+
+  lastClientCodeHash = hash;
+
+  indexJsFile = file;
+  indexJsMapFile = mapFile;
+
+  console.log(new Date().valueOf(),
+    'Browser-side assets bundled successfully.',
+    hash);
+
+  if (firstNotify) {
+    afterFirstCompileCallback();
+  }
+
+  try {
+    // wss.sendAll(JSON.stringify({ debug: { reload: true } }));
+    wss.sendAll(JSON.stringify({ debug: { file: file.toString('base64'),
+      hash } }));
+  } catch (e) {
+  }
+
+});
+
+assetsCompiler.onError(errors => {
+  console.error('Webpack Bundling errors:', errors);
+  errors = errors.map(error => error.message);
+  try {
+    wss.sendAll(JSON.stringify({ debug: { errors } }));
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 
@@ -42,10 +82,13 @@ const hostedFiles = {
   // type, cache time, cache tag
   '/': [ 'index.html',
     'text/html', 0, null ],
-  '/index.js': [ '/index.js',
+
+  '/index.js': [ function () { return indexJsFile; },
     'application/javascript; charset=UTF-8', 3, null ],
-  '/index.js.map': [ '/index.js.map',
+
+  '/index.js.map': [ function () { return indexJsMapFile; },
     'application/json; charset=UTF-8', 3, null ],
+
   '/index.css': [ '/index.css',
     'text/css; charset=UTF-8', 3, null ],
 };
@@ -78,21 +121,47 @@ const server = require('http')
     }
   );
 
-
-
+const uuid = require('uuid/v4');
+const serverRunId = uuid();
 
 const WebSocket = require('ws');
 
 const wss = new WebSocket.Server({ server });
 const clientAddress = require('./lib/client-address');
 
-let wsSend = m => {};
 
 // Implement sessions to send "bundle recompiled"
 // to all debugged clients.
 // Implement custom url debug mode enablers
 // or another way to activate debug mode
 // to support even first errors logging.
+
+wss.sendAll = function sendAll (data) {
+  this.clients.forEach(function (client) {
+    try {
+      client.send(data);
+    } catch (e) {
+    }
+  });
+};
+
+function sendAfterCompileFinished (ws, addr) {
+  if (lastClientCodeHash) {
+    try {
+      ws.send(JSON.stringify({
+        client: addr,
+        srvRunId: serverRunId,
+        cltCodeHash: lastClientCodeHash
+      }));
+    } catch (e) {
+      return;
+    }
+  } else {
+    afterFirstCompileCallback = function () {
+      sendAfterCompileFinished(ws, addr);
+    };
+  }
+}
 
 wss.on('connection', (ws, req) => {
 
@@ -101,6 +170,10 @@ wss.on('connection', (ws, req) => {
     new Date().valueOf(),
     addr.ip + ':' + addr.port,
     'A WebSocket client connected');
+
+  sendAfterCompileFinished(ws);
+
+
 
   ws.on('message', message => {
     let data = null;
@@ -118,10 +191,10 @@ wss.on('connection', (ws, req) => {
       data.length === 0) {
         
       // Keepalive packet
-      console.log(
+      /* console.log(
         new Date().valueOf(),
         addr.ip + ':' + addr.port,
-        'HEARTBEAT');
+        'HEARTBEAT'); */
 
       ws.send('');
     } else if (data) {
@@ -142,11 +215,6 @@ wss.on('connection', (ws, req) => {
             
         console.log.apply(console, args);
       }
-     /* try {
-        ws.send(JSON.stringify({}));
-      } catch (e) {
-        return;
-      }*/
     }
   });
 });

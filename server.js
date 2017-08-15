@@ -40,9 +40,9 @@ assetsCompiler.onComplete((file, mapFile, hash, stats) => {
   }
 
   try {
-    // wss.sendAll(JSON.stringify({ debug: { reload: true } }));
-    wss.sendAll(JSON.stringify({ debug: { file: file.toString('base64'),
-      hash } }));
+    wss.sendAll(JSON.stringify({ debug: { reload: true } }));
+    // wss.sendAll(JSON.stringify(
+    //   { debug: { file: file.toString('base64'), hash } }));
   } catch (e) {
   }
 

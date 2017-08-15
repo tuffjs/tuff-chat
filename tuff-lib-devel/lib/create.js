@@ -34,17 +34,13 @@ module.exports = function create(parent, definition) {
                 return value.apply(this, mainArguments);
               };
             } else {
-              console.log(value.name);
-              function tuffObject () {
+              return function tuffObject () {
                 var mainArguments = Array.prototype.slice.call(arguments);
                 mainArguments.unshift(parentConstructor);
                 mainArguments.unshift(this);
                 value.apply(this, mainArguments);
                 return this;
               };
-              Object.defineProperty(tuffObject, 'name',
-                { value: value.name });
-              return tuffObject;
             }
           }
         })(definition[propertyName])

@@ -147,6 +147,7 @@ function orientation () {
 
 function viewState () {
   return orientation() +
+    ' Scale: ' + window.devicePixelRatio + 'x' +
     ' Win: ' +
     window.innerWidth + 'x' + window.innerHeight +
     ' Pos: ' +
@@ -170,8 +171,48 @@ console.log('ON START:', viewState());
 function onDomContentLoaded () {
   self.domContentLoadedAt = new Date().valueOf();
 
+  var scale = 1 / window.devicePixelRatio;
+
+  var bgWidth = scale * 1200;
+  var bgHeight = scale * 800;
+
+  document.documentElement.style.width = '0px';
+  document.documentElement.style.height = '0px';
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style['background-size'] = 
+    bgWidth + 'px ' + bgHeight + 'px';
+  document.title = 'Tuff Chat Demo';
+
+  console.log(document.documentElement.getBoundingClientRect().right
+  );
+
+  var metaViewport = document.querySelector('meta[name=viewport]');
+  if (!metaViewport) {
+    metaViewport = document.createElement('meta');
+    metaViewport.id = 'viewport';
+    metaViewport.name = 'viewport';
+    document.getElementsByTagName('head')[0].appendChild(metaViewport);
+  }
+
+  // Force predictable viewport
+  metaViewport.setAttribute('content',
+    'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1');
+
+
+  // Real pixels doesn't work good in Web. Forget it.
+  // Use scale to load images with high DPI and to construct
+  // precise pixel width of lines and/ other elements.
+  //
+  // Meta viewport has bugs if set not to 1 and device-width.
+  // After page reload it can suddenly change current window size.
+  // Also it sets incorrect size if smaller size was rounded.
+  // And it's absolutely impossible to determine physical screen size.
+  // If using full-page scaling, iOS Safari and old Android browser
+  // downscale background and cut edges. Also old Android browser
+  // scrolls controls independendtly from CSS background when focusing.
+
   var root = document.getElementsByTagName('body')[0];
-  root.innerHTML = '<input style="position: absolute; top: 200px;" type="text" value="TEXT">';
+  root.innerHTML = '<input style="position: absolute; top: 3px;" type="text" value="TEXT">';
 
   console.log('DOM CONTENT LOADED:', viewState());
   
@@ -223,7 +264,6 @@ window.addEventListener('scroll', function (event) {
 
   self.lastScrollHappenAt = new Date().valueOf();
 
-
   console.log('SCROLL', viewState());
 
 });
@@ -238,4 +278,28 @@ window.addEventListener('orientationchange', function (event) {
 });
 
 window.bundleLoadedTimestamp = new Date().valueOf();
+
+
+
+
+
+
+
+
+
+
+
+
+// Android 4.2.2 Browser:
+/* 1502769966371 '::ffff:192.168.0.91:34012' 'ORIENTATION' 'portrait-primary Win: 534x239 Pos: 0 html.clientSize: 534x239, BODY: scrollSize 534x239, scrollTop 0'
+1502769966445 '::ffff:192.168.0.91:34018' 'ORIENTATION' 'portrait-primary Win: 533x243 Pos: 0 html.clientSize: 533x243, BODY: scrollSize 533x243, scrollTop 0'
+1502769966602 '::ffff:192.168.0.91:34018' 'RESIZE REQUESTED' 'portrait-primary Win: 320x456 Pos: 0 html.clientSize: 320x456, BODY: scrollSize 320x456, scrollTop 0'
+
+
+
+1502769985872 '::ffff:192.168.0.91:34012' 'ORIENTATION' 'portrait-primary Win: 534x239 Pos: 0 html.clientSize: 534x239, BODY: scrollSize 534x239, scrollTop 0'
+1502769985936 '::ffff:192.168.0.91:34018' 'ORIENTATION' 'landscape-primary Win: 320x456 Pos: 0 html.clientSize: 320x456, BODY: scrollSize 320x456, scrollTop 0'
+1502769986073 '::ffff:192.168.0.91:34018' 'RESIZE REQUESTED' 'landscape-primary Win: 533x243 Pos: 0 html.clientSize: 533x243, BODY: scrollSize 533x243, scrollTop 0'
+
+*/
 

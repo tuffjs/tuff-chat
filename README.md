@@ -92,3 +92,50 @@ round down real sizes.
   console.log(scale, window.innerWidth, window.innerHeight);
 ```
 
+## Layout concept
+
+The second component will return smaller size also.
+It may happen that both components release free space enough
+for one of them to expand.
+But we not letting it to expand but using expandable component
+to fill the space and expand it even more.
+Available + align: left/center/right
+free space is filled with another component on right, left,
+or both sides. Another component on the right side may be
+the same, and for it "requested with" may be specified too.
+For precise size returned, Layout can define align & spacing
+(no margins!)
+
+Instead of precise fixed size components may return size
+for given size available. Another part will be filled with
+another components.
+Inside of the layout it may be specified where to stick
+the component: center, left, right after some free space will be
+released. Component may determine that it should be expanded.
+It's better to define it in layout. Those components resized
+to exact maximum size available after layout process is finished.
+Several expandable components occupy even spread size by default
+but we can define special rules in layout and assign different
+proportions.
+Minimum size is never specified: component get assigned either
+with requested size, or it has to adapt to the size which is
+smaller.
+
+To better look, instead of one minimum size, the scheme
+of the layout of component is used, and it returns components
+size which is little bit smaller than requested from pre-layout.
+Layout uses that minimum size to calculate available sizes for
+other components, and after computing their precise sizes,
+lets the former component to expand and fit all the remaining size.
+
+Between breaking sizes, every layout has specified minimum and
+maximum precise sizes for every child, and system interpolates
+everything in the middle automatically.
+
+Layout can define that a component has minimum size and will be
+expanded for all available space around (if it's expandable),
+or the component will return specific size for size defined in
+the layout, which is equal or smaller.
+
+Alignments are for every cell and for every group up to whole size.
+

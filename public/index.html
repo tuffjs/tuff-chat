@@ -1,8 +1,22 @@
 <!DOCTYPE html>
-<html style="width: 0px; height: 0px; overflow: hidden;">
+<html> <!-- style="width: 0px; height: 0px; overflow: hidden;">
+-->
   <head>
-    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1" />
-    <link rel="stylesheet" type="text/css" href="/index.css">
+    <script>
+      // blur();
+      var serverUrl = window.SERVER_URL || window.location.origin;
+      var serverParsedLocation = document.createElement('a');
+      serverParsedLocation.href = serverUrl;
+      var SERVER_WS_URL =
+        (serverParsedLocation.protocol === 'https:' ?
+          'wss://' : 'ws://') + serverParsedLocation.host;
+      window.g_webSocket = new WebSocket(SERVER_WS_URL);
+    </script>
+    <meta name="viewport"
+     content="initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    
+
+<!-- <link rel="stylesheet" type="text/css" href="/index.css"> --
     <style>
       html {
         font-family: sans-serif-light, -apple-system, "Segoe UI", "Liberation Sans";
@@ -14,15 +28,19 @@
         /* background-color: #30004F; */
         /* background-image: url("http://www.wavealchemy.co.uk/assets/img/productQuoteFold.gif"); */
 
-        background-image: url('http://georgebenainous.com/web/code/layout_grid.gif');
-        background-repeat: repeat;
+        /* background-image: url('http://georgebenainous.com/web/code/layout_grid.gif');
+        background-repeat: repeat; */
         
       }
-    </style>
+    </style> -->
+
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
-    <title>Tuff Chat</title>
+
+    <!-- <title>Tuff Chat</title> -->
     <script type="text/javascript" src="/index.js"></script>
   </head>
-  <body style="width: 0px; height: 0px; overflow: hidden;"></body>
+  <body></body>
+  <!-- style="width: 0px; height: 0px; overflow: hidden;"></body> -->
 </html>
+

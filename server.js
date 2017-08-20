@@ -14,6 +14,12 @@ const Promise = require('bluebird');
 
 
 // Compiling browser-side assets
+// 1. Normalize existing css. Replace surrounding single quotes
+//    with double quotes.
+// var 
+
+var cssMinifer = require('./lib/css-minifier');
+
 var assetsCompiler = require('./lib/assets-compiler');
 
 let lastClientCodeHash = null;
@@ -30,6 +36,8 @@ assetsCompiler.onComplete((file, mapFile, hash, stats) => {
 
   indexJsFile = file;
   indexJsMapFile = mapFile;
+
+  // console.log(JSON.parse(indexJsMapFile));
 
   console.log(new Date().valueOf(),
     'Browser-side assets bundled successfully.',
@@ -88,6 +96,9 @@ const hostedFiles = {
 
   '/index.js.map': [ function () { return indexJsMapFile; },
     'application/json; charset=UTF-8', 3, null ],
+
+  '/layout_grid.gif': [ '/layout_grid.gif',
+    'image/gif', 3, null ],
 
   '/index.css': [ '/index.css',
     'text/css; charset=UTF-8', 3, null ],
@@ -200,20 +211,42 @@ wss.on('connection', (ws, req) => {
     } else if (data) {
 
       if (data.debug) {
-        // var SourceMapConsumer = require('source-map')
-        //   .SourceMapConsumer;
-        // var sourceMapFile = // check version of client!
-        // var smc = new SourceMapConsumer(sourceMapFile);
-        // add smc.originalPositionFor(
-        // line, column) ->
-        // { source, line, column, name }
-        const args =
-          [ data.debug.time,
-            addr.ip + ':' + addr.port
-          ]
-          .concat(data.debug.message);
+        if (data.debug.message &&
+            data.debug.message[4] &&
+            typeof(data.debug.message[4]) == 'object' &&
+            data.debug.message[4].line &&
+            data.debug.message[4].column) {
+
+          var SourceMapConsumer = require('source-map')
+            .SourceMapConsumer;
+          var smc = new SourceMapConsumer(
+            JSON.parse(indexJsMapFile));
+
+          // { source: 'http://example.com/www/js/two.js',
+          //   line: 2,
+          //   column: 10,
+          //   name: 'n' }
+          var pos = smc.originalPositionFor({
+            line: data.debug.message[4].line,
+            column: data.debug.message[4].column
+          });
             
-        console.log.apply(console, args);
+          console.log(data.debug.time,
+            addr.ip + ':' + addr.port,
+            data.debug.message[0],
+            '"' + pos.name + '" at line ' + pos.line +
+            ' col ' + pos.column + ' in ' +
+            pos.source);   
+
+        } else {
+          const args =
+            [// data.debug.time,
+             // addr.ip + ':' + addr.port
+            ]
+            .concat(data.debug.message);
+            
+          console.log.apply(console, args);
+        }
       }
     }
   });

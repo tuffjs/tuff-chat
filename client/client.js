@@ -36,6 +36,8 @@ if (!hotUpdate) {
   });
 }
 
+var resetCss = require('./reset-css');
+
 //
 // tuff/lib/create
 //
@@ -98,8 +100,8 @@ var Inherited = supportNew(create(Base, {
 
 var a = new Inherited(3, 4);
 var b = create(Inherited).init(3, 4);
-console.log(a);
-console.log(b);
+//console.log(a);
+//console.log(b);
 
 
 
@@ -166,10 +168,20 @@ function viewState () {
       '');
 }
 
+// TODO: It's necessary to track focus state
+// when resize happens. When keyboard appears,
+// but focus not on controls, resize shouldn't
+// actually happen. It's a special case when user taps
+// on address bar and keyboard pops up.
+
 console.log('ON START:', viewState());
 
 function onDomContentLoaded () {
   self.domContentLoadedAt = new Date().valueOf();
+
+  document.body.style.width = '0px';
+  document.body.style.height = '0px';
+  document.body.style.overflow = 'hidden';
 
   var scale = 1 / window.devicePixelRatio;
 
@@ -212,7 +224,10 @@ function onDomContentLoaded () {
   // scrolls controls independendtly from CSS background when focusing.
 
   var root = document.getElementsByTagName('body')[0];
-  root.innerHTML = '<input style="position: absolute; top: 3px;" type="text" value="TEXT">';
+  root.innerHTML = '<input style="position: absolute; top: 3px;" type="text" value="A LOT OF TEXT">; // <div id="here"></div>';
+
+  document.getElementsByTagName('input')[0].focus();
+
 
   console.log('DOM CONTENT LOADED:', viewState());
   
@@ -239,6 +254,9 @@ window.onload = function (event) {
   console.log('LOAD');
 };
 
+window.addEventListener('touchend', function (event) {
+  document.getElementsByTagName('input')[0].focus();
+});
 
 window.addEventListener('resize', function (event) {
 

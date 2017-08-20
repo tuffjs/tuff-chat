@@ -19,10 +19,19 @@ var SERVER_WS_URL = serverParsedLocation.protocol === 'https:' ?
 var myWebSocket = null;
 var wasConnected = false;
 
-function connect() {
+function connect () {
   try {
     wasConected = false;
-    var webSocket = new WebSocket(SERVER_WS_URL);
+    // First time attaching to the websocket created in index.html
+    var webSocket;
+    if (!myWebSocket) {
+      webSocket = window.g_webSocket;
+      // TODO: change this to global variable
+      wasConnected = true;
+    } else {
+      webSocket = new WebSocket(SERVER_WS_URL);
+    }
+
     webSocket.onclose = onClose;
     webSocket.onerror = onError;
     webSocket.onopen = onOpen;

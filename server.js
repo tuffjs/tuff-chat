@@ -28,13 +28,26 @@ let indexJsMapFile = null;
 
 let afterFirstCompileCallback = null;
 
-assetsCompiler.onComplete((file, mapFile, hash, stats) => {
+assetsCompiler.onComplete((jsBundleFile, mapFile, hash, stats) => {
 
   var firstNotify = (!lastClientCodeHash && afterFirstCompileCallback);
 
   lastClientCodeHash = hash;
 
-  indexJsFile = file;
+  // Replace hash in bundled file:
+  // Search for assignment window.JAVASCRIPT_BUNDLE_HASH = 'REPLACE_WEBPACK_HASH';
+
+  var hashPos = jsBundleFile.indexOf('REPLACE_WEBPACK_HASH');
+  if (hashPos === -1) {
+    console.log(new Date().valueOf(),
+      `Browser-side assets reported that bundled successfully but found no hash. Skipping.
+       Add window.JAVASCRIPT_BUNDLE_HASH = 'REPLACE_WEBPACK_HASH' at the most beginning of main entry`,
+      hash);
+    return;
+  }
+  jsBundleFile.write(hash, hashPos, 20);
+
+  indexJsFile = jsBundleFile;
   indexJsMapFile = mapFile;
 
   // console.log(JSON.parse(indexJsMapFile));
@@ -48,9 +61,9 @@ assetsCompiler.onComplete((file, mapFile, hash, stats) => {
   }
 
   try {
-    wss.sendAll(JSON.stringify({ debug: { reload: true } }));
+    wss.sendAll(JSON.stringify({ debug: { reload: true, hash } }));
     // wss.sendAll(JSON.stringify(
-    //   { debug: { file: file.toString('base64'), hash } }));
+    //   { debug: { file: jsBundleFile.toString('base64'), hash } }));
   } catch (e) {
   }
 

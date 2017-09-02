@@ -1,5 +1,7 @@
 var wsSend = function () {};
 
+var reloadConfirmationDialogIsDisplayed = false;
+
 function initDebug (wsSendFunction) {
 
   wsSend = wsSendFunction;
@@ -9,9 +11,19 @@ function initDebug (wsSendFunction) {
 
       if (message.debug) {
         if (message.debug.reload) {
-          if (window.confirm(
-              'Browser-side assets bundled successfully. Reload?')) {
-            window.location.reload(true);
+          if (message.debug.hash !== window.JAVASCRIPT_BUNDLE_HASH) {
+
+            if (!reloadConfirmationDialogIsDisplayed) {
+              reloadConfirmationDialogIsDisplayed = true;
+
+              if (window.confirm(
+                  'Browser-side assets bundled successfully. Reload?')) {
+                window.location.reload(true);
+              }
+              setTimeout(function () {
+                reloadConfirmationDialogIsDisplayed = false;
+              }, 0);
+            }
           }
           return true;
 

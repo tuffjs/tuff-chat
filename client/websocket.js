@@ -7,14 +7,15 @@ var serverUrl = window.SERVER_URL || window.location.origin;
 var serverParsedLocation = document.createElement('a');
 serverParsedLocation.href = serverUrl;
 
-console.log('Server URL: ' + serverUrl);
-console.log('WebSocket URL: ' + SERVER_WS_URL);
 
 var SERVER_WS_URL = serverParsedLocation.protocol === 'https:' ?
   // Production URL
   'wss://' + serverParsedLocation.host :
   // Debug
   'ws://' + serverParsedLocation.host;
+
+console.log('Server URL: ' + serverUrl);
+console.log('WebSocket URL: ' + SERVER_WS_URL);
 
 var myWebSocket = null;
 var wasConnected = false;
@@ -72,6 +73,8 @@ function onError (event) {
 };
 
 function onOpen (event) {
+
+  console.log('Connected to server');
 
   // Ready to send messages
   wasConnected = true;

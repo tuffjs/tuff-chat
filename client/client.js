@@ -1,3 +1,9 @@
+// First line executed ever
+window.lastNavigationTimestamp = new Date().valueOf();
+
+window.JAVASCRIPT_BUNDLE_HASH = 'REPLACE_WEBPACK_HASH'; // Will be replaced by compiler after bundling
+console.log('Bundle version', window.JAVASCRIPT_BUNDLE_HASH);
+
 var hotUpdate = false;
 
 if (window.bundleLoadedTimestamp) {
@@ -5,9 +11,6 @@ if (window.bundleLoadedTimestamp) {
   console.log('MIGRATING GLOBAL ASSETS...');
 }
 
-
-// First line executed ever
-window.lastNavigationTimestamp = new Date().valueOf();
 
 // Debugging support
 if (!hotUpdate) {
@@ -36,7 +39,34 @@ if (!hotUpdate) {
   });
 }
 
-var resetCss = require('./reset-css');
+require('./reset-css');
+
+
+// Project common css
+
+var localCss = '\
+html {\
+  font-family: sans-serif-light, -apple-system, "Segoe UI", "Liberation Sans";\
+  font-style: normal;\
+  font-size: 14px;\
+  line-height: 20px;\
+  /* color: #777; */\
+  font-weight: 300;\
+  /* background-color: #30004F; */\
+\
+  background-image: url("layout_grid.gif");\
+  /*background-color: transparent;*/\
+  background-repeat: repeat;\
+}\
+body {\
+  /*background-color: #30004F;*/\
+}\
+';
+
+var cssSheet = document.createElement('style');
+cssSheet.innerHTML = localCss;
+document.head.appendChild(cssSheet);
+
 
 //
 // tuff/lib/create
@@ -176,27 +206,36 @@ function viewState () {
 
 console.log('ON START:', viewState());
 
+var self = {};
+
+// For iOS Safari landscape height fix
+self.heightWas = window.innerHeight;
+
 function onDomContentLoaded () {
   self.domContentLoadedAt = new Date().valueOf();
+  var virtualPixelWidth = document.documentElement.getBoundingClientRect().width;
 
-  document.body.style.width = '0px';
-  document.body.style.height = '0px';
-  document.body.style.overflow = 'hidden';
+  //document.body.style.width = '0px';
+  //document.body.style.height = '0px';
+  //document.body.style.overflow = 'hidden';
 
   var scale = 1 / window.devicePixelRatio;
+
+  var physicalPixelWidth = virtualPixelWidth * window.devicePixelRatio;
+
+  console.log('Device width is', physicalPixelWidth, virtualPixelWidth, window.devicePixelRatio,
+    window.getComputedStyle(document.documentElement).width, document.documentElement.clientWidth, document.documentElement.scrollWidth);
 
   var bgWidth = scale * 1200;
   var bgHeight = scale * 800;
 
-  document.documentElement.style.width = '0px';
-  document.documentElement.style.height = '0px';
-  document.documentElement.style.overflow = 'hidden';
-  document.documentElement.style['background-size'] = 
-    bgWidth + 'px ' + bgHeight + 'px';
-  document.title = 'Tuff Chat Demo';
+  //document.documentElement.style.width = '0px';
+  //document.documentElement.style.height = '0px';
+  //document.documentElement.style.overflow = 'hidden';
 
-  console.log(document.documentElement.getBoundingClientRect().right
-  );
+  //document.documentElement.style['background-size'] = 
+  //  bgWidth + 'px ' + bgHeight + 'px';
+  document.title = 'Tuff Chat Demo';
 
   var metaViewport = document.querySelector('meta[name=viewport]');
   if (!metaViewport) {
@@ -209,7 +248,6 @@ function onDomContentLoaded () {
   // Force predictable viewport
   metaViewport.setAttribute('content',
     'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1');
-
 
   // Real pixels doesn't work good in Web. Forget it.
   // Use scale to load images with high DPI and to construct
@@ -224,12 +262,56 @@ function onDomContentLoaded () {
   // scrolls controls independendtly from CSS background when focusing.
 
   var root = document.getElementsByTagName('body')[0];
-  root.innerHTML = '<input style="position: absolute; top: 3px;" type="text" value="A LOT OF TEXT">; // <div id="here"></div>';
+  //root.innerHTML = '<div style = "width: 1px; -webkit-transform: scale(' + scale + ', 1); height: 100px; position: absolute; top: 0px; left: ' +
+  //  (virtualPixelWidth - 1) + //scale) +
+  //  'px; background-color: blue;"></div>';
+  //root.innerHTML = '<input style="position: absolute; top: 3px;" type="text" value="A LOT OF TEXT">'; // <div id="here"></div>;
 
-  document.getElementsByTagName('input')[0].focus();
+  //root.innerHTML = '<div id="window" style="-webkit-overflow-scrolling: auto!important; overflow: hidden; position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px;"><input style="position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT"></div>';
 
+  updateContainer();
 
   console.log('DOM CONTENT LOADED:', viewState());
+
+  setTimeout(function () {
+
+    // In iOS embedded WebView, height comes as full screen,
+    // but after load requested resize.
+
+    // Only for iOS, in landscape mode, height 100% doesn't work, we have to take it from window height
+    // Safari and Messenger for iOS Only!!!
+    if (!navigator.userAgent.match('CriOS') || navigator.userAgent.match('MessengerForiOS')) {
+      var orientationWas = orientation();
+      if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+        var newHeight = window.innerHeight;
+        var delta = self.heightWas - newHeight;
+        if (delta) {
+          window.scrollTo(0, delta);
+          var style = document.getElementById('window').style;
+          style.height = 'calc(100% - ' + delta + 'px)';
+          style.top = delta + 'px';
+
+          console.log('FIX iOS Safari / Messenger landscape on LOAD', delta, newHeight);
+        }
+
+        return;
+      }
+    }
+
+    // Messenger iOS portrait fix
+    if (navigator.userAgent.match('MessengerForiOS')) {
+      var newHeight = window.innerHeight;
+      var delta = self.heightWas - newHeight;
+      if (delta) {
+        var style = document.getElementById('window').style;
+
+        style.height = 'calc(100% - ' + delta + 'px)';
+        window.scrollTo(0, 0);
+
+        console.log('FIX iOS Messenger on DOM CONTENT LOADED + 700ms', delta, newHeight);
+      }
+    }
+  }, 700);
   
   setTimeout(function () {
     console.log('2 SEC AFTER DOM CONTENT LOADED:', viewState());
@@ -245,18 +327,38 @@ if (!hotUpdate) {
 }
 
 
-var self = {};
-
 window.onload = function (event) {
 
   self.loadHappenAt = new Date().valueOf();
 
-  console.log('LOAD');
+  console.log('LOAD', viewState());
 };
 
-window.addEventListener('touchend', function (event) {
-  document.getElementsByTagName('input')[0].focus();
-});
+function focusTextbox (elt) {
+  var strLength = elt.value.length * 2;
+  
+  elt.focus();
+  elt.setSelectionRange(strLength, strLength);
+}
+
+function onWindowClick (event) {
+
+  return;
+
+
+  var textbox = document.getElementsByTagName('input')[0];
+  if (textbox) {
+    focusTextbox(textbox);
+  } else {
+    //var root = document.getElementsByTagName('body')[0];
+    //root.innerHTML = '<div id="window"><input style="position: absolute; top: 3px;" type="text" value="A LOT OF TEXT"></div>';
+
+    focusTextbox(document.getElementsByTagName('input')[0]);
+  }
+};
+
+window.addEventListener('touchend', onWindowClick);
+window.addEventListener('click', onWindowClick);
 
 window.addEventListener('resize', function (event) {
 
@@ -264,36 +366,287 @@ window.addEventListener('resize', function (event) {
 
   var resizeAtLoad = self.lastResizeHappenAt - self.domContentLoadedAt;
 
-  if (resizeAtLoad > 500) {
+  if (resizeAtLoad > 700) {
 
     console.log('RESIZE REQUESTED', viewState());
+
+    updateContainer();
 
   } else {
     // In iOS embedded WebView, height comes as full screen,
     // but after load requested resize.
+    console.log(navigator.appVersion);
+
+    // Only for iOS Safari, in landscape mode, height 100% doesn't work, we have to take it from window height
+    // Safari Only!!!
+    if (!navigator.userAgent.match('CriOS')) {
+      var orientationWas = orientation();
+      if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+        var newHeight = window.innerHeight;
+        var delta = self.heightWas - newHeight;
+        if (delta) {
+          window.scrollTo(0, delta);
+          var style = document.getElementById('window').style;
+          // style.borderBottom = delta + 'px solid red';
+          //style.height = newHeight + 'px';
+          style.height = 'calc(100% - ' + delta + 'px)';
+          style.top = delta + 'px';
+
+          console.log('FIX iOS Safari landscape on RESIZE ON LOAD', delta, newHeight);
+          //style.height = window.innerHeight + 'px';
+        }
+      }
+    }
+    
     console.log('RESIZE AT LOAD REQUESTED', viewState(),
       self.lastResizeHappenAt - self.loadHappenAt,
       self.lastResizeHappenAt - self.domContentLoadedAt);
+
+    updateContainer();
   }
-});
+}, true);
+
+function updateContainer () {
+  return;
+
+  self.width = window.innerWidth;
+  self.height = window.innerHeight;// - 88;
+  self.minimumWidth = self.width < self.height ?
+    self.width : self.height;
+
+  var style = document.getElementById('window').style;
+
+  style.position = 'absolute';
+  
+  style.top = document.body.scrollTop + 'px';
+  style.width = window.innerWidth + 'px';
+  if (self.focus && document.body.scrollTop !== self.scrollTopWas) { // Scrolling when keyboard is visible
+    // style.height = self.innerHeightWas + document.body.scrollTop + 'px';
+    style.height = self.innerHeightWas - self.scrollTopWas + 10 + 'px'; // 10 is half of the input height
+    console.log('----', document.body.scrollTop, self.scrollTopWas, style.height);
+  } else {
+    style.height = self.focus ? window.innerHeight - self.scrollTopWas + 'px' : window.innerHeight - document.body.scrollTop + 'px';
+  }
+
+  style.border = '1px solid blue';
+  style['background-color'] = 'yellow';
+}
 
 
 window.addEventListener('scroll', function (event) {
 
   self.lastScrollHappenAt = new Date().valueOf();
 
+  var scrollAtLoad = self.lastScrollHappenAt - self.domContentLoadedAt;
+  /*
+  if (scrollAtLoad < 500) {
+    // On iOS Safari, it scrolls screen in landscape mode
+    var orientationWas = orientation();
+    if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+      var newHeight = window.innerHeight;
+      var delta = self.heightWas - newHeight;
+
+      var style = document.getElementById('window').style;
+      style.borderBottom = delta + 'px solid red';
+      window.scrollTo(0, 0);
+      console.log('FIX iOS Safari landscape', delta);
+    }
+  }*/
+
   console.log('SCROLL', viewState());
 
-});
+  var shouldReturn = false;
+
+  if (self.scrollLock) {
+    self.scrollLock = false;
+    console.log('UNLOCK SCROLL LOCK');
+    shouldReturn = true;
+  }
+
+  if (self.iOSMessengerShouldPatchOnScrollAfterBlur) {
+    self.iOSMessengerShouldPatchOnScrollAfterBlur = false;
+    var delta = document.documentElement.clientHeight - window.innerHeight;
+    
+    var style = document.getElementById('window').style;
+    style.height = 'calc(100% - ' + delta + 'px)';
+
+    var orientationWas = orientation();
+    if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+      //var newHeight = window.innerHeight;
+      //var delta = self.heightWas - newHeight;
+      if (delta) {
+        console.log('iOS Messenger scrolling to 0,' + delta + '...', viewState());
+        window.scrollTo(0, delta);
+        style.top = delta + 'px';
+      }
+    } else {
+      style.top = '0px';
+      console.log('iOS Messenger scrolling to 0,0...', viewState(), delta);
+      window.scrollTo(0, 0);
+    }
+    return;
+
+  } else if (self.iOSSafariLandscapeShouldPatchOnScrollAfterBlur) {
+    self.iOSSafariLandscapeShouldPatchOnScrollAfterBlur = false;
+    var delta = document.documentElement.clientHeight - window.innerHeight;
+
+    var newHeight = window.innerHeight;
+    if (delta) {
+      window.scrollTo(0, delta);
+
+      var style = document.getElementById('window').style;
+      style.height = 'calc(100% - ' + delta + 'px)';//newHeight + 'px';
+      style.top = delta + 'px';
+      console.log('iOS Safari landscape returning back to fullscreen height', delta, newHeight);
+    }
+    return;
+  }
+
+  if (shouldReturn) {
+    return;
+  }
+
+  // Only for iOS:
+  // Mobile Safari & Google Chrome iOS fix full-screen container after focusing an element
+  if (self.focus && document.body.scrollTop !== 0) {
+    self.scrollLock = true;
+  
+    // Google Chrome iOS returns real viewport height here, but Safari only in portrait mode reports strange smaller size.
+    var newWindowHeight = window.innerHeight;
+
+    // If iOS in portrait mode, real height when focused is little bit bigger:
+    var orientationWas = orientation();
+    if (orientationWas == 'portrait-primary' || orientationWas == 'portrait-secondary') {
+      // Safari Only!!!
+      if (!navigator.userAgent.match('CriOS') && !navigator.userAgent.match('MessengerForiOS')) {
+        newWindowHeight += 10.5;
+      }
+    }
+
+    /*if (navigator.userAgent.match('MessengerForiOS') && (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary')) {
+      console.log('iOS Messenger focus autoscroll happened. Repositioning viewport...');
+      var offsetTop = document.body.scrollTop; // or window.pageYOffset - I don't know which is better
+      var style = document.getElementById('window').style;
+      style.height = newWindowHeight + 'px';
+      style.top = offsetTop + 'px';
+      self.focusPatchApplied = true;
+    } else {*/
+      console.log('iOS WebKit focus autoscroll happened. Repositioning viewport...');
+      var offsetTop = document.body.scrollTop; // or window.pageYOffset - I don't know which is better
+      var style = document.getElementById('window').style;
+      style.height = newWindowHeight + 'px';
+      style.top = offsetTop + 'px';
+      self.focusPatchApplied = true;
+    //}
+  }
+
+  return;
+
+  if (self.focus && document.body.scrollTop !== 0) {
+    window.scrollTo(0, 0);
+  } else {
+    updateContainer();
+  }
+}, true);
+
+document.addEventListener('blur', function (event) {
+  self.focus = false;
+  if (self.focusPatchApplied) {
+    var style = document.getElementById('window').style;
+    // For iOS Safari in landscape mode, height should be less than 100% and it should be scrolled to the most bottom to avoid bugs:
+    // Safari Only!!!
+    if (!navigator.userAgent.match('CriOS') && !navigator.userAgent.match('MessengerForiOS')) {
+      var orientationWas = orientation();
+      if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+        // Handling it in scroll will be too late.
+        // We have to use remembered value if rotation will not happen.
+        // Only if user has rotated the screen, and we never were aware about that size,
+        // we postpone it to onscroll.
+        self.iOSSafariLandscapeShouldPatchOnScrollAfterBlur = true;
+        console.log('iOS Safari landscape returning back to fullscreen height', viewState());
+
+      } else { // ???????????
+        console.log('iOS Safari portrait returning back to fullscreen height');
+        style.height = '100%';
+        style.top = '0px';
+        window.scrollTo(0, 0);
+      }
+    } else if (navigator.userAgent.match('MessengerForiOS')) {
+      // Handling it in scroll will be too late.
+      // We have to use remembered value if rotation will not happen.
+      // Only if user has rotated the screen, and we never were aware about that size,
+      // we postpone it to onscroll.
+      self.iOSMessengerShouldPatchOnScrollAfterBlur = true;
+      console.log('iOS Messenger returning back to fullscreen height', viewState());
+      
+    } else {
+      console.log('iOS Chrome returning back to fullscreen height');
+      style.height = '100%';
+      style.top = '0px';
+      // window.scrollTo(0, 0);
+    }
+  }
+  console.log('BLUR', viewState());
+  return;
+  setTimeout( function () {
+    console.log('BLUR', viewState());
+    self.scrollTopWas = 0;
+    self.focus = false;
+    updateContainer();
+  }, 200);
+}, true);
+
+document.addEventListener('focus', function (event) {
+
+  // Only for iOS Safari in portrait mode!!!
+  // Fixing height to 100% to let Safari change height exactly.
+  // Safari Only!!!
+  if (!navigator.userAgent.match('CriOS')) {
+    var orientationWas = orientation();
+    if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+      var style = document.getElementById('window').style;
+      style.height = '100%';
+    }
+  }
+
+  self.focus = true;
+  console.log('FOCUS', viewState());
+  return;
+  setTimeout( function () {
+    console.log('FOCUS', viewState());
+    self.scrollTopWas = document.body.scrollTop;
+    self.innerHeightWas = window.innerHeight;
+    self.focus = true;
+    //var textbox = document.getElementsByTagName('input')[0];
+    //textbox.style.top = '3px';
+    updateContainer();
+    window.scrollTo(0,0);
+  }, 200);
+}, true);
 
 
 window.addEventListener('orientationchange', function (event) {
 
-  self.lastOrientationChangeHappenAt = new Date().valueOf();
-
   console.log('ORIENTATION', viewState());
 
-});
+  self.lastOrientationChangeHappenAt = new Date().valueOf();
+
+  // Google Chrome Mobile doesn't require document's width being less
+  // than screen width, and it'll not resize viewport IF HEIGHT == 100%.
+
+  // Google Chrome Mobile requires document's width being less
+  // than screen width, otherwise it'll resize viewport:
+  if (!self.lastResizeHappenAt ||
+      (self.lastOrientationChangeHappenAt - self.lastResizeHappenAt)
+      > 500) {
+    if (self.width > self.height) {
+      console.log('L->P Google Chrome Mobile');
+      var style = document.getElementById('window').style;
+      style.width = self.minimumWidth + 'px';
+    }
+  }
+
+}, true);
 
 window.bundleLoadedTimestamp = new Date().valueOf();
 

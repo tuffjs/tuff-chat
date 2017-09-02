@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html> <!-- style="width: 0px; height: 0px; overflow: hidden;">
--->
+<html style="height: 100%"> <!-- style="width: 100%; min-height: 100%;"><!-- overflow: hidden;"> -->
+
   <head>
     <script>
-      // blur();
       var serverUrl = window.SERVER_URL || window.location.origin;
       var serverParsedLocation = document.createElement('a');
       serverParsedLocation.href = serverUrl;
@@ -12,35 +11,61 @@
           'wss://' : 'ws://') + serverParsedLocation.host;
       window.g_webSocket = new WebSocket(SERVER_WS_URL);
     </script>
-    <meta name="viewport"
-     content="initial-scale=1, minimum-scale=1, maximum-scale=1" />
-    
-
-<!-- <link rel="stylesheet" type="text/css" href="/index.css"> --
-    <style>
-      html {
-        font-family: sans-serif-light, -apple-system, "Segoe UI", "Liberation Sans";
-        font-style: normal;
-        font-size: 14px;
-        line-height: 20px;
-        /* color: #777; */
-        font-weight: 300;
-        /* background-color: #30004F; */
-        /* background-image: url("http://www.wavealchemy.co.uk/assets/img/productQuoteFold.gif"); */
-
-        /* background-image: url('http://georgebenainous.com/web/code/layout_grid.gif');
-        background-repeat: repeat; */
-        
-      }
-    </style> -->
-
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1" />
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
-
-    <!-- <title>Tuff Chat</title> -->
     <script type="text/javascript" src="/index.js"></script>
+
+
   </head>
-  <body></body>
-  <!-- style="width: 0px; height: 0px; overflow: hidden;"></body> -->
+  <!--
+
+    Chrome Android: fixed works always
+    Chrome iOS: both fixed and 100% works both portrait and landscape, with rotation. Virtual keyboard scrolls viewport and fixeds do not update.
+
+    Safari: fixed works portrait only. Virtual keyboard scrolls viewport and fixeds do not update. After rotation to landscape, internal contents of fixeds disappear, the height of viewport is incorrect, and it scrolled so header and footer are hidden under Safari's address and navigation bars.
+      100% height works if specify it in html AND body. Margin and padding may be 0 for body element. And box-sizing: border-box should be for those elements containing borders.
+      Doesn't work after rotation into landscape anyway - height is too big and it scrolled under the address bar.
+
+    Android Browser: absolute inside fixed doesn't work at all.
+      Height: 100% for html, body, and containing div works on Android Browser, Chrome, and portrait Safari.
+
+    On Android 4.2.2 Browser and even Chrome, keyboard hides when rotation happens and then shows up again. Negligible bug.
+    Android 7 behaves perfectly in all browsers.
+
+    iOS Safari: 100% makes bottom part hidden when page loaded in landscape. When rotating to portrait and back to landscape, iOS Safari scrolls page so both footer and header become
+    invisible.
+
+    On Android 4.2.2 Browser, when keyboard is active, both address bar and navigation bottom bar disappear. That's actually pretty nice and saves space. But sometimes it's not disappear completely,
+
+    Samsung Internet and Chrome on Android 7 have fake orientation events (P->L: 1) OR: L SIZE: PORTRAIT FULL; 2) OR: P SIZE: PORTRAIT CUT; 3) RESIZE: L SIZE: LANDSCAPE CORRECT.
+    
+    On Android, orientationchange event can come several times and it's super unreliable. But resize always reports correct new size and orientation.
+    Chrome on iOS though works very reliably with orientation change and resize. But scrolling should be prevented in the same way as in Safari.
+    For orientationchange, Safari is wild and requires tons of fixes.
+
+    Safari and Chrome iOS doing autoscroll when focusing at very specific distance, and resizes window (but the size doesn't matter too much).
+
+    In Android Chrome, Browser, and Samsung Internet, when tapping on an input box which located inside of scrollable container, it doesn't scrolls up automatically.
+
+    iOS Chrome scrolls the whole window up, so does Safari.
+    In iOS Chrome, window height after scroll ends is correct. In iOS Safari, it adds few strange pixels.
+
+    Text input box tap fix is necessary for all iOS browsers.
+    All input boxes on iOS will intercept click on them and reposition to the most bottom before browser shows keyboard,
+    then moving to the correct place.
+
+
+
+  -->
+  <body style="margin: 0; padding: 0; height: 100%;">
+      <!-- <div id="window" style="border: 2px solid red;  background-color: yellow; -webkit-overflow-scrolling: auto!important; overflow: hidden; position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px;"><input style="position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT"></div> -->
+
+      <div id="window" style="position: relative; box-sizing: border-box; border: 2px solid red; border-bottom: 10px solid red; overflow: hidden; height: 100%;">
+        <!-- <div style="width: 100%; height: 100%; overflow: scroll; -webkit-overflow-scrolling: auto!important;"><div style="background: rgba(255,255,0,0.3); position: relative; height: 1024px; width: 100%"> -->
+          <input style="height: 20px; font-size: 20px; position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT">
+        <!-- </div></div> -->
+      </div>
+  </body> <!-- style="width: 100%; height: 101%; overflow: hidden;"></body> -->
 </html>
 

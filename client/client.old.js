@@ -1,5 +1,71 @@
 var debug = require('./debug.js');
 window.lastNavigationTimestamp = new Date().valueOf();
+window.JAVASCRIPT_BUNDLE_HASH = 'REPLACE_WEBPACK_HASH'; // Will be replaced by compiler after bundling
+console.log('Bundle version', window.JAVASCRIPT_BUNDLE_HASH);
+
+var hotUpdate = false;
+
+if (window.bundleLoadedTimestamp) {
+  hotUpdate = true;
+  console.log('MIGRATING GLOBAL ASSETS...');
+}
+
+
+// Debugging support
+if (!hotUpdate) {
+
+  var ws = require('./websocket');
+
+  var DEBUG = true;
+
+  var debug = DEBUG ? require('./debug')(ws.send) : null;
+
+  var hotUpdate = require('./hot-update');
+
+  // ws.send
+  ws.recv(function onMessage (message) {
+
+
+    if (DEBUG && debug.receive(message)) {
+      return;
+    }
+
+    if (hotUpdate.receive(message)) {
+      return;
+    }
+
+    console.log(message);
+  });
+}
+
+require('./reset-css');
+
+
+// Project common css
+
+var localCss = '\
+html {\
+  font-family: sans-serif-light, -apple-system, "Segoe UI", "Liberation Sans";\
+  font-style: normal;\
+  font-size: 14px;\
+  line-height: 20px;\
+  /* color: #777; */\
+  font-weight: 300;\
+  /* background-color: #30004F; */\
+\
+  /*background-image: url("layout_grid.gif");*/\
+  background-color: transparent;\
+  background-repeat: repeat;\
+}\
+body {\
+  background-color: #30004F;\
+}\
+';
+
+var cssSheet = document.createElement('style');
+cssSheet.innerHTML = localCss;
+document.head.appendChild(cssSheet);
+
 var create = require('tuff/lib/create');
 require('es6-symbol/implement');
 require('string.prototype.startswith');
@@ -11,26 +77,26 @@ var Component = require('tuff/lib/component');
 
 
 var C2 = create(Component, {
-  init: function () {
+  init: function (self, parent) {
+    parent.call(self);
     // this.height = 40;
     return this;
   },
 
-  setRect: function (rect) {
+  setRect: function (self, rect) {
     this.rect = rect;
     this.invalidate();
     this.render();
   },
 
-  setHeight: function (height) {
+  setHeight: function (self, height) {
     this.height = height;
     this.invalidate();
     this.render();
   },
 
   view:
-    function (h) {
-      var self = this;
+    function (self, h) {
               return h('div',
                 { style:
                   { // height: '100%',
@@ -53,17 +119,18 @@ var C2 = create(Component, {
 });
 
 var Child = create(Component, {
-  init: function () {
+  init: function (self, parent) {
+    parent.call(self);
     return this;
   },
 
-  onFocus: function (evt) {
+  onFocus: function (self, evt) {
     console.log('Focus',
       window.innerHeight,
       evt);
   },
 
-  view: function (h) {
+  view: function (self, h) {
     var self = this;
     return h('div',
       { style:
@@ -113,14 +180,14 @@ var TuffObject = {
   isWidget: false,
   children: [],
 
-  init: function (parent) {
+  init: function (self, parent) {
 
     if (parent) {
       this.setParent(parent);
     }
   },
 
-  setParent: function (parent) {
+  setParent: function (self, parent) {
     if (!this.isWidget) {
       throw "Only widget can have a parent";
     }
@@ -182,7 +249,7 @@ var TUFFWIDGETSIZE_MAX = 16777215;
 var TUFFLAYOUTSIZE_MAX = 524288;
 
 var Widget = create(TuffObject, {
-  init: function (parent) {
+  init: function (self, parent) {
     TuffObject.init.call(this, parent);
 
     this.isWidget = true;
@@ -203,7 +270,7 @@ var Widget = create(TuffObject, {
     this.size = TuffSize(0, 0);
   },
 
-  layoutRequest: function () {
+  layoutRequest: function (self) {
     // TODO: async setImmediate etc.
     // this.layoutChildren:
     // child.setGeometry(...)
@@ -1133,8 +1200,9 @@ var ViewContainer = create(Widget, {
 });
 
 var Cont = create(Component, {
-  init: function () {
-    var self = this;
+  init: function (self, parent) {
+    parent.call(self);
+
     /*
     var metaViewport = document.querySelector('meta[name=viewport]');
     if (!metaViewport) {
@@ -1339,14 +1407,26 @@ var Cont = create(Component, {
     });
 
     window.addEventListener("touchstart", function (e) {
-      console.log('Window touch');
+      console.log('Window touch', window.innerHeight, window.outerHeight, window.screenTop);
       // e.preventDefault();
-    });
+      
+      e.stopPropagation();
+      e.preventDefault();
+      e.cancelBubble = true;
+    }, true);
+
+    window.addEventListener("touchend", function (e) {
+      console.log('Window touch end', window.innerHeight, window.outerHeight, window.screenTop);
+      // e.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
+      e.cancelBubble = true;
+    }, true);
 
     window.addEventListener("touchmove", function (e) {
       console.log('Window move');
       // e.preventDefault();
-    });
+    }, true);
 
     // handle event
     window.addEventListener("resize", function() {
@@ -1492,12 +1572,12 @@ var Cont = create(Component, {
 
     return this;
   },
-  setWidth: function (width) {
+  setWidth: function (self, width) {
     this.width = width;
     this.invalidate();
     this.render();
   },
-  view: function (h) {
+  view: function (self, h) {
     // console.log(window);
     var self = this;
 
@@ -1506,7 +1586,7 @@ var Cont = create(Component, {
     // return h('body');
     return h('body',
       { style:
-        { backgroundColor: 'yellow',
+        { backgroundColor: 'yellow'
         },
         on:
         { //click:
@@ -1525,6 +1605,7 @@ var Cont = create(Component, {
             function (e) {
               self.touched = true;
               console.log('Touchmove');//, flatten(e));
+              
               // e.stopPropagation();
               e.preventDefault();
             },
@@ -1539,6 +1620,17 @@ var Cont = create(Component, {
         }
       },
       [
+        h('div', { style: {
+          backgroundColor: 'green',
+          position: 'fixed',
+          // top: '90%', //self.height - 20 + 'px',
+          '-webkitBackfaceVisibility': 'hidden',
+          bottom: '0px',
+          right: 20 + 'px',
+          zIndex: '1000'
+        } },
+        'RightBottom'),
+
       h('div#scrollingDiv',
         { style:
           { backgroundColor: 'green',
@@ -1600,6 +1692,8 @@ var Cont = create(Component, {
   var bottomLock = false;
   scrollingDiv.addEventListener('touchmove', function(event){
     console.log('Touchmove');
+    event.preventDefault();
+    console.log(screen.height, screen.availHeight, window.outerHeight);
     event.stopPropagation();
     var currentY = event.touches[0].clientY;
     if (currentY > lastY) {
@@ -1635,11 +1729,15 @@ var Cont = create(Component, {
     // TODO: logic when another touch happened.
     // We should prevent pinch zoom here and deactivation of our locks.
     lastY = event.touches[0].clientY;
+    console.log('TOUCHSTART');
     event.stopPropagation();
+    event.preventDefault();
   });
   scrollingDiv.addEventListener('touchend', function(event){
+    console.log('TOUCHEND');
+    event.preventDefault();
     event.stopPropagation();
-  });
+  }, true);
 
               }
           }
@@ -1699,24 +1797,34 @@ var Cont = create(Component, {
         } },
         'RightBottom'),
 
+        h('div', { style: {
+          backgroundColor: 'green',
+          position: 'absolute',
+          top: '100%', //self.height - 20 + 'px',
+          right: 20 + 'px'
+        } },
+        'RightBottom')
+
       ]
     );
 
   }
 });
 
-/*
+
 window.onload = function () {
+  window.scrollTo(0, 0);
+
   console.log('------LOAD');
 
-    var root = document.getElementsByTagName('body')[0];
-    root.innerHTML = '';
+    //var root = document.getElementsByTagName('body')[0];
+    //root.innerHTML = '';
 
-    var cont = create(Cont).init();
+    //var cont = create(Cont).init();
 
-    cont.mount(root);
-    cont.render();
-};*/
+    //cont.mount(root);
+    //cont.render();
+};
 
 // TODO: this should be called from main view frame
 document.addEventListener('DOMContentLoaded', function () {
@@ -1732,7 +1840,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     cont.mount(root);
     cont.render();
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
+
+    console.log(screen.height, screen.availHeight, window.outerHeight);
   }, 1500);
 
   // window.scrollTo(0, 0);//44);

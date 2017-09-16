@@ -58,13 +58,27 @@
 
 
   -->
-  <body style="margin: 0; padding: 0; height: 100%;">
+  <body style="margin: 0; padding: 0; height: 100%">
       <!-- <div id="window" style="border: 2px solid red;  background-color: yellow; -webkit-overflow-scrolling: auto!important; overflow: hidden; position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px;"><input style="position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT"></div> -->
 
-      <div id="window" style="position: relative; box-sizing: border-box; border: 2px solid red; border-bottom: 10px solid red; overflow: hidden; height: 100%;">
-        <!-- <div style="width: 100%; height: 100%; overflow: scroll; -webkit-overflow-scrolling: auto!important;"><div style="background: rgba(255,255,0,0.3); position: relative; height: 1024px; width: 100%"> -->
-          <input style="height: 20px; font-size: 20px; position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT">
-        <!-- </div></div> -->
+      <div id="window" style="position: relative; box-sizing: border-box; border: 2px solid red; border-bottom: 1px solid red; overflow: hidden; height: 100%;">
+          <!-- <select name="cars" style="height: 20px; position: absolute; bottom: 25px;">
+              <option value="volvo">Volvo</option>
+              <option value="saab">Saab</option>
+              <option value="fiat">Fiat</option>
+              <option value="audi">Audi</option>
+            </select> -->
+        <div id="scroller" style="width: 100%; height: 100%; overflow: scroll; -webkit-overflow-scrolling: touch!important;"><div style="background: rgba(255,255,0,0.3); position: relative; height: 1024px; width: 100%;">
+
+          <input id="input1" style="height: 20px; position: absolute; bottom: 85px;" type="text" value="A LOT OF TEXT 1">
+          <input id="input2" style="height: 20px; position: absolute; bottom: 45px;" type="text" value="A LOT OF TEXT 2">
+          <input id="input3" style="height: 20px; position: absolute; bottom: 0px;" type="text" value="A LOT OF TEXT 3">
+        </div></div>
+        <!-- <div style="background-color: red; width: 100%; height: 40px; position: absolute; bottom: 0px;"></div> -->
+        <!-- <div id="scroller" style="width: 100%; height: 100%; overflow: scroll; -webkit-overflow-scrolling: touch!important;"><div style="background: rgba(255,255,0,0.3); position: relative; height: 1024px; width: 100%;">
+          <input id="input" style="height: 20px; font-size: 20px; position: fixed; bottom: 40px;/*428px;*/" type="text" value="A LOT OF TEXT">
+          <input id="input" style="height: 20px; font-size: 20px; position: fixed; bottom: 0px;/*428px;*/" type="text" value="A LOT OF TEXT">
+        </div></div> -->
       </div>
   </body> <!-- style="width: 100%; height: 101%; overflow: hidden;"></body> -->
 </html>

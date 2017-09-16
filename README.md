@@ -9,6 +9,8 @@ See https://crackstation.net/hashing-security.htm on best practices of how to "s
 
 ## Mobile window bugs and limitations
 
+- Don't set background-image for html element. It will jump on iOS WebKit browsers.
+
 There's no guarantee on precise scrolling detection. Browsers always
 round down real sizes.
 

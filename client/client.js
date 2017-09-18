@@ -246,6 +246,10 @@ function sizeChanged () {
     // Move input box to the bottom of page to force Safari
     // scroll window to obtain exact height of the visible area
     function onInputClick (event) {
+      if (document.activeElement === event.target) {
+        return;
+      }
+
       self.lastTapOnKbControlHappenAt = new Date().valueOf();
 
       self.heightWas = window.innerHeight;
@@ -535,9 +539,107 @@ window.addEventListener('resize', function (event) {
         sizeChanged();
       }
     }
-  
 
     console.log('RESIZE REQUESTED', viewState());
+
+    if (navigator.userAgent.match('iPhone')) {
+
+      var orientationWas = orientation();
+      if (navigator.userAgent.match('MessengerForiOS')) {
+        if (orientationWas == 'landscape-primary' ||
+            orientationWas == 'landscape-secondary') {
+          var style = document.getElementById('window').style;
+          style.height = window.innerHeight + 'px';
+          style.top = document.body.scrollTop + 'px';
+          sizeChanged();
+          console.log('FIX iOS Messenger landscape after rotation portrait -> landscape');
+          setTimeout(function () {
+            console.log(viewState());
+          }, 200);
+        } else {
+
+          // If no scroll but resize happens after orientation change:
+          var wasScroll = (self.lastResizeHappenAt - self.lastScrollHappenAt) < 350;
+          var wasOrientation = (self.lastResizeHappenAt - self.lastOrientationChangeHappenAt) < 350;
+          if (wasScroll && wasOrientation) {
+            setTimeout(function () {
+              var style = document.getElementById('window').style;
+              style.height = window.innerHeight + 'px';//'calc(100% - ' + 88 + 'px)';
+              style.top = '0px';
+              sizeChanged();
+              console.log('FIX iOS Messenger portrait after rotation landscape -> portrait', viewState());
+            }, 200);
+          }
+        }
+      }
+
+      // Only for iOS, in landscape mode, height 100% doesn't work, we have to take it from window height
+      // Safari and Messenger for iOS Only!!!
+      if (!navigator.userAgent.match('CriOS')
+          && !navigator.userAgent.match('MessengerForiOS')) {
+        var orientationWas = orientation();
+        if (orientationWas == 'landscape-primary' || orientationWas == 'landscape-secondary') {
+          if (!self.focus) {
+            var newHeight = window.innerHeight;
+            var delta = self.heightWas - newHeight;
+            console.log(newHeight, delta);
+            if (delta > 0) {
+              window.scrollTo(0, delta);
+              var style = document.getElementById('window').style;
+              style.height = 'calc(100% - ' + delta + 'px)';
+              style.top = delta + 'px';
+              sizeChanged();
+
+              console.log('FIX iOS Safari / Messenger landscape after rotation portrait -> landscape', delta, newHeight);
+            } else {
+              var style = document.getElementById('window').style;
+              //style.height = newHeight + 'px'; //'calc(100% - ' + delta + 'px)';
+              style.height = 'calc(100% - ' + document.body.offsetTop + 'px)';
+              style.top = document.body.offsetTop + 'px';
+              // window.scrollTo(0, 0);
+              sizeChanged();
+
+              console.log('FIX iOS Safari / Messenger landscape after rotation portrait -> landscape', delta, newHeight);
+            }
+          }
+        } else {
+          // At rotating from portrait to landscape on iOS Safari,
+          // it emits a resize event with portrait orientation
+          // but new fullscreen size. We should save that height
+          // to subtract the difference otherwise it's impossible
+          // to determine the visible area.
+          self.heightWas = window.innerHeight;
+        }
+      }
+
+/*
+      var orientationWas = orientation();
+      var resizeAfterScroll = self.lastResizeHappenAt - self.lastScrollHappenAt;
+      console.log(resizeAfterScroll, orientationWas);
+      if (//resizeAfterScroll < 350 &&
+         (orientationWas == 'landscape-primary'
+          || orientationWas == 'landscape-secondary')) {
+        console.log('iOS WebKit rotated from portrait to landscape');
+        var style = document.getElementById('window').style;
+        style.height = window.innerHeight + 'px';//'calc(100% - ' + delta + 'px)';
+        style.top = document.body.scrollTop + 'px';
+        sizeChanged();
+        /*
+        var newHeight = window.innerHeight;
+        var delta = self.heightWas - newHeight;
+        if (delta) {
+          window.scrollTo(0, delta);
+          var style = document.getElementById('window').style;
+          // style.borderBottom = delta + 'px solid red';
+          //style.height = newHeight + 'px';
+          style.height = 'calc(100% - ' + delta + 'px)';
+          style.top = delta + 'px';
+          sizeChanged();
+
+          console.log('FIX iOS Safari landscape on RESIZE ON LOAD', delta, newHeight);
+        }*/
+      //}
+    }
 
     updateContainer();
 
@@ -656,6 +758,51 @@ window.addEventListener('scroll', function (event) {
     shouldReturn = true;
   }
 
+  if (!scrollAtLoad && navigator.userAgent.match('iPhone')) {
+
+    // Safari and Messenger for iOS Only!!!
+    // If scroll happens after orientation change and it's portrait mode now,
+    // and if scroll top is 0, remove top offset in that portrait mode:
+    if (!navigator.userAgent.match('CriOS')
+        || navigator.userAgent.match('MessengerForiOS')) {
+      var orientationWas = orientation();
+      if (document.body.scrollTop == 0 &&
+         (orientationWas == 'portrait-primary'
+         || orientationWas == 'portrait-secondary')) {
+        if (!self.focus) {
+          // var newHeight = window.innerHeight;
+          var style = document.getElementById('window').style;
+          style.height = '100%';//window.innerHeight + 'px';//calc(100% - ' + delta + 'px)';
+          style.top = '0px';
+          sizeChanged();
+
+          console.log('FIX iOS Safari / Messenger portrait after rotation landscape -> portrait');
+        } else {
+          // It's impossible to precisely determine virtual keyboard height
+          // after rotation on iOS, so we just blur it out:
+          document.activeElement.blur();
+          /*
+          var style = document.getElementById('window').style;
+          style.height = '56px';//window.innerHeight + 'px';//calc(100% - ' + delta + 'px)';
+          style.top = '0px';
+          sizeChanged();
+          */
+          console.log('FIX iOS Safari / Messenger portrait after rotation landscape -> portrait in focus');
+          /*setTimeout(function () {
+            console.log(viewState());
+          }, 2000);*/
+        }
+      } else if (self.focus && document.body.scrollTop > 0 &&
+        (orientationWas == 'landscape-primary'
+        || orientationWas == 'landscape-secondary')) {
+        // It's impossible to precisely determine virtual keyboard height
+        // after rotation on iOS, so we just blur it out:
+        //document.activeElement.blur();
+        //console.log('FIX iOS Safari / Messenger portrait after rotation portrait -> landscape in focus');
+      }
+    }
+  }
+
   if (self.iOSMessengerShouldPatchOnScrollAfterBlur) {
     self.iOSMessengerShouldPatchOnScrollAfterBlur = false;
     var delta = document.documentElement.clientHeight - window.innerHeight;
@@ -736,13 +883,17 @@ window.addEventListener('scroll', function (event) {
       self.focusPatchApplied = true;
     } else {*/
       self.lastAutoscrollHappenedAt = new Date().valueOf();
-      console.log('iOS WebKit focus autoscroll happened. Repositioning viewport...');
-      var offsetTop = document.body.scrollTop; // or window.pageYOffset - I don't know which is better
-      var style = document.getElementById('window').style;
-      style.height = newWindowHeight + 'px';
-      style.top = offsetTop + 'px';
-      sizeChanged();
-      self.focusPatchApplied = true;
+
+      if ((self.lastAutoscrollHappenedAt - self.lastFocusHappenedAt) < 700) {
+        console.log('iOS WebKit focus autoscroll happened. Repositioning viewport...');
+        var offsetTop = document.body.scrollTop; // or window.pageYOffset - I don't know which is better
+        var style = document.getElementById('window').style;
+        style.height = newWindowHeight + 'px';
+        style.top = offsetTop + 'px';
+        sizeChanged();
+        self.focusPatchApplied = true;
+      }
+
     //}
   }
 
@@ -837,6 +988,16 @@ document.addEventListener('blur', function (event) {
 
 document.addEventListener('focus', function (event) {
 
+  var focusHappenedAt = new Date().valueOf();
+
+  if (self.lastBlurHappenAt) {
+    if ((focusHappenedAt - self.lastBlurHappenAt) > 350) {
+      self.lastFocusHappenedAt = focusHappenedAt;
+    }
+  } else {
+    self.lastFocusHappenedAt = focusHappenedAt;
+  }
+
   // iOS WebKit: move text control back to its position
   // after correct calculation of new window height and scrolling offset
   var input = event.target;
@@ -896,6 +1057,24 @@ window.addEventListener('orientationchange', function (event) {
       console.log('L->P Google Chrome Mobile');
       var style = document.getElementById('window').style;
       style.width = self.minimumWidth + 'px';
+    }
+  }
+
+  if (navigator.userAgent.match('iPhone')) {
+    
+    // All WebKit iOS!
+    // If scroll happens after orientation change and it's portrait mode now,
+    // and if scroll top is 0, remove top offset in that portrait mode:
+    //var orientationWas = orientation();
+    if (self.focus /*&&
+      document.body.scrollTop > 0 &&
+      (orientationWas == 'landscape-primary'
+    || orientationWas == 'landscape-secondary')*/) {
+      console.log('FIX iOS Safari / Messenger portrait after rotation portrait -> landscape in focus');
+      var style = document.getElementById('window').style;
+      style.height = '100%';
+      style.top = '0px';
+      document.activeElement.blur();
     }
   }
 

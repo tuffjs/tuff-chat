@@ -43,7 +43,7 @@ assetsCompiler.onComplete((jsBundleFile, mapFile, hash, stats) => {
       `Browser-side assets reported that bundled successfully but found no hash. Skipping.
        Add window.JAVASCRIPT_BUNDLE_HASH = 'REPLACE_WEBPACK_HASH' at the most beginning of main entry`,
       hash);
-    console.log(jsBundleFile.size);
+    console.log(jsBundleFile.length);
     return;
   }
   jsBundleFile.write(hash, hashPos, 20);
